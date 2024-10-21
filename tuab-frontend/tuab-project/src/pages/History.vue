@@ -11,20 +11,33 @@
 
       <div class="content">
         <br><br><br>
-        <h1>Booking History</h1><br>
-        <center><img src="bstatus.png" width=39% height=15%></center>
+        <h1>Booking History</h1> 
+        <br>
+        <div class="status-container">     
+            <img src="bstatus.png" class="sticky-img" width=39% height=15%>
+        </div>
+
+        <div class="content2">
         <br><br>
         <div v-for="(booking, index) in bookings" :key="index" class="slot">
           <h2>{{ booking.bookingDate }}</h2>
           <s1>Lane {{ booking.targetLaneID }}</s1>
           <s1>{{ booking.shiftID }}</s1>
-          <button class="addbtn" @click="addslip(booking.bookingID)"><span>PAYMENT</span></button>
+          <!-- <button class="addbtn" @click="addslip(booking.bookingID)"><span>PAYMENT</span></button> -->
+          <button class="addbtn" 
+              :class="{ 'disabled-btn': booking.bookingStatusID === 2 || booking.bookingStatusID === 3 }"  
+              @click="addslip(booking.bookingID)" 
+              :disabled="booking.bookingStatusID === 2 || booking.bookingStatusID === 3">
+            <span>PAYMENT</span>
+          </button>
+
 
           <img v-if="booking.bookingStatusID === 2" src="paychecked.png" width="4%" height="4%">
           <img v-else-if="booking.bookingStatusID === 1" src="paypending.png" width="4%" height="4%">
           <img v-else-if="booking.bookingStatusID === 3" src="cancel.png" width="4%" height="4%">
         </div>
         <br><br>
+      </div>
       </div>
     </body>
   </div>
@@ -192,6 +205,36 @@ width: 17%;
 height: 40px;
 padding-top: 0.5%;
 text-align: center;
+}
+
+.disabled-btn {
+    background-color: grey; /* เปลี่ยนสีปุ่มเป็นสีเทา */
+    color: white; /* สีตัวอักษร */
+    cursor: not-allowed; /* เปลี่ยน cursor แสดงว่าไม่สามารถคลิกได้ */
+    opacity: 0.5; /* ทำให้โปร่งใสเพื่อเอฟเฟกต์ grayout */
+}
+
+.status-container {
+    display: flex;
+    justify-content: center; /* จัดรูปให้อยู่ตรงกลาง */
+    position: sticky; 
+    top: 0; /* ล็อกไว้ที่ด้านบนเมื่อเลื่อนถึง */
+    z-index: 1000; /* ทำให้เห็นได้ชัดเหนือ content อื่น */
+    background-color: white; /* สีพื้นหลังเพื่อให้มองเห็นได้เมื่อเลื่อน */
+    padding: 10px; /* เพิ่ม padding เพื่อให้มีพื้นที่รอบๆ รูป */
+    background-color: #DFE9F5;
+}
+
+.sticky-img {
+    position: sticky;
+    top: 0; /* ล็อกรูปไว้ที่ด้านบนสุด */
+    z-index: 1000;
+    margin: 0 auto;
+    /* display: block; */
+}
+
+.content2 {
+    height: 100%; /* จำลองความยาวของเนื้อหาเพื่อให้เห็นการเลื่อน */
 }
 
 .cancelbtn {
