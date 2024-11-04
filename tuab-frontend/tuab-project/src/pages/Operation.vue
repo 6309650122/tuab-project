@@ -37,6 +37,12 @@
         <h7>The operation has been saved</h7><br>
         <button type="submit" @click="closePopup">DONE</button>
       </div> 
+
+      <div class="popup" id="completePopupForAlert">
+        <img src="warning.png" width=30% height=30%><br>
+        <h7>Please select the different between start date and end date</h7><br>
+        <button type="submit" @click="closePopupForAlert">CLOSE</button>
+      </div> 
     </body>
   </div>
 </template>
@@ -76,7 +82,12 @@ export default {
       });
     },
     submitForm() {
-      if (this.startDate && this.endDate && !this.isSubmitting) {
+      if (this.startDate && this.endDate && this.startDate === this.endDate){
+        this.openPopupForAlert();
+        return;
+      }
+
+      if (this.startDate && this.endDate && !this.isSubmitting && this.startDate !== this.endDate) {
         this.isSubmitting = true;
         const formData = {
           opID: localStorage.getItem("opID"),
@@ -102,7 +113,15 @@ export default {
     closePopup(){
       const completePopup = document.getElementById('completePopup');
       completePopup.classList.remove('open-popup')
-    }
+    },
+    openPopupForAlert(){
+      const completePopup = document.getElementById('completePopupForAlert');
+      completePopup.classList.add('open-popup')
+    },
+    closePopupForAlert(){
+      const completePopup = document.getElementById('completePopupForAlert');
+      completePopup.classList.remove('open-popup')
+    },
   },
   mounted() {
     // Get today's date
