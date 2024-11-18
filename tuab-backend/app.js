@@ -29,6 +29,7 @@ var editoperationRouter = require('./routes/editoperation');
 var checkBookForPayRouter = require('./routes/checkBookForPay');
 var checkSlipRouter = require('./routes/checkSlip');
 var filterBookMonthRouter = require('./routes/filterBookMonth');
+const holidaysRouter = require('./routes/thaiHolidays')
 
 var app = express();
 
@@ -65,6 +66,7 @@ app.use('/editoperation', editoperationRouter);
 app.use('/checkBookForPay', checkBookForPayRouter);
 app.use('/checkSlip', checkSlipRouter);
 app.use('/filterBookMonth', filterBookMonthRouter);
+app.use('/thaiHolidays', holidaysRouter); 
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

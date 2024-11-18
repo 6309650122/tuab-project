@@ -178,7 +178,7 @@ export default {
     const today = new Date();
 
     // Set the minimum date to today
-    this.minDate = today.toISOString().split('T')[0];
+    this.minDate = ISOString().split('T')[0];
 
     // Get tomorrow's date
     const tomorrow = new Date();

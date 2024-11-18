@@ -18,14 +18,24 @@
           <!-- Start Date -->
           <label>Start Date</label><br>
           <center>
-          <input class="datepicker" type="date" v-model="startDate" :min="minDate" required>
+          <input class="datepicker" 
+                type="date" 
+                v-model="startDate" 
+                :min="minDate" 
+                :disabled="isDateDisabled(startDate)"   
+          required>
           </center>
           <br><br>
 
           <!-- End Date -->
           <label>End Date</label><br>
           <center>
-          <input class="datepicker" type="date" v-model="endDate" :min="startDate" required>
+          <input class="datepicker" 
+                type="date" 
+                v-model="endDate" 
+                :min="nextDayStartDate" 
+                :disabled="isDateDisabled(endDate)"  
+          required>
           <center><button class="submit" @click="submitForm">SAVE</button></center>
           </center>
         </form>
@@ -37,7 +47,7 @@
         <h7>The operation has been saved</h7><br>
         <button type="submit" @click="closePopup">DONE</button>
       </div> 
-
+      <!-- CompletePopUP For Alert -->
       <div class="popup" id="completePopupForAlert">
         <img src="warning.png" width=30% height=30%><br>
         <h7>Please select the different between start date and end date</h7><br>
@@ -59,10 +69,37 @@ export default {
       endDate:'',
       minDate: '',      // Minimum date
       name: '',
+      holidays: [],
     };
   },
   methods: {
-    backhome () {
+    async fetchHolidays() {
+    try {
+      const response = await axios.get('http://localhost:3000/thaiHolidays');
+      this.holidays = response.data.holidays
+        .filter(holiday => holiday.public)  // กรองเฉพาะวันหยุดที่ public: true
+        .map(holiday => holiday.date);      // เก็บแค่วันที่
+
+      console.log(this.holidays);  // ตรวจสอบข้อมูลที่ดึงมา
+    } catch (error) {
+      console.error('Error fetching holidays:', error);
+    }
+  },
+
+  isDateDisabled(date) {
+    const day = new Date(date).getDay();
+    
+    // วันเสาร์ (6) หรือวันอาทิตย์ (0)
+    const isWeekend = (day === 0 || day === 6);
+
+    // วันหยุดนักขัตฤกษ์
+    const isHoliday = this.holidays.some(holiday => holiday.date === date);
+    
+    // ไม่สามารถเลือกวันเสาร์, อาทิตย์ หรือวันหยุด
+    return isWeekend || isHoliday;
+  }, 
+    
+  backhome() {
       this.$router.push('/superStaff-home')
       localStorage.removeItem("opID");
     },
@@ -129,12 +166,34 @@ export default {
 
     // Set the minimum date to today
     this.minDate = today.toISOString().split('T')[0];
+
+    // Get tomorrow's date
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    // Set the maximum date to tomorrow
+    this.maxDate = tomorrow.toISOString().split('T')[0];
+
     this.fetchOperation();
+    this.fetchHolidays();
   },
+  computed: {
+  nextDayStartDate() {
+    if (this.startDate) {
+      const date = new Date(this.startDate);
+      date.setDate(date.getDate() + 1);
+      return date.toISOString().split('T')[0];
+    } 
+    return null; // หากยังไม่มี startDate
+  }
+},
   mixins: [NotToken],
 }
 </script>
 
 <style scoped>
 @import '@/assets/css/Operation.css';
+.disabled{
+  background-color: #d3d3d3;  /* ทำให้วันที่ดูจาง */
+}
 </style>
