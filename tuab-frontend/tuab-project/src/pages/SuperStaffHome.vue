@@ -11,6 +11,7 @@
         <p Align=center><button class="menu" @click="booking"><span> BOOK NOW </span></button></p><br>
         <p Align=center><button class="menu" @click="cancel"><span> CANCEL BOOKING </span></button></p><br>
         <p Align=center><button class="menu" @click="history"><span> BOOKING HISTORY </span></button></p><br>
+        <p Align=center><button class="menu" @click="StaffTimesheet"><span> STAFF TIMESHEET </span></button></p><br>
         <p Align=center><button class="staffmenu" @click="shiftSchedule"><span><img src="setting.png" width=9%> Manage Timesheet </span></button></p><br>
         <p Align=center><button class="staffmenu" @click="operation"><span><img src="setting.png" width=9%> Edit Settings </span></button></p><br>
       </div>
@@ -64,6 +65,7 @@
 import axios from 'axios';
 import NotToken from '../components/NotToken.vue';
 import LogoutBotton from '../components/LogoutBotton.vue';
+import StaffTimesheet from './StaffTimesheet.vue';
 export default {
   components:{
     LogoutBotton
@@ -106,6 +108,9 @@ export default {
     },
     shiftSchedule() {
       this.$router.replace("shift-schedule");
+    },
+    StaffTimesheet() {
+      this.$router.replace("staff-timesheet");
     },
     showSlip(booking) {
       const { username, bookingID } = booking;

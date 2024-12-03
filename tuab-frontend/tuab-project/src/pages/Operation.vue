@@ -41,6 +41,10 @@
         </form>
       </div>
 
+      <div class="content">
+        <h4>Current Super Staff : {{username}} {{name}}</h4> 
+      </div>
+
       <!-- CompletePopUP  -->
       <div class="popup" id="completePopup">
         <img src="paychecked.png" width=30% height=30%><br>
@@ -93,7 +97,7 @@ export default {
     const isWeekend = (day === 0 || day === 6);
 
     // วันหยุดนักขัตฤกษ์
-    const isHoliday = this.holidays.some(holiday => holiday.date === date);
+    const isHoliday = this.holidays.includes(date);
     
     // ไม่สามารถเลือกวันเสาร์, อาทิตย์ หรือวันหยุด
     return isWeekend || isHoliday;
@@ -159,6 +163,10 @@ export default {
       const completePopup = document.getElementById('completePopupForAlert');
       completePopup.classList.remove('open-popup')
     },
+    disableWeekends (date) {
+      const day = new Date(date).getDay()
+      return day === 0 || day === 6
+    },
   },
   mounted() {
     // Get today's date
@@ -176,6 +184,8 @@ export default {
 
     this.fetchOperation();
     this.fetchHolidays();
+
+    console.log(this.holidays)
   },
   computed: {
   nextDayStartDate() {
@@ -193,7 +203,8 @@ export default {
 
 <style scoped>
 @import '@/assets/css/Operation.css';
-.disabled{
-  background-color: #d3d3d3;  /* ทำให้วันที่ดูจาง */
+.disabled {
+  color: #ccc; /* ทำให้ตัวอักษรจางลง */
+  background-color: #eee; /* ทำให้พื้นหลังเป็นสีเทา */
 }
 </style>
