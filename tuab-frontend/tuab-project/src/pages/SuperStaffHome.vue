@@ -6,14 +6,15 @@
           <h3>{{roleName}}: {{name}}</h3>
         </div>
         <br><br>
-        <p Align=center><LogoutBotton /></p>
-        <br><br>
         <p Align=center><button class="menu" @click="booking"><span> BOOK NOW </span></button></p><br>
         <p Align=center><button class="menu" @click="cancel"><span> CANCEL BOOKING </span></button></p><br>
         <p Align=center><button class="menu" @click="history"><span> BOOKING HISTORY </span></button></p><br>
         <p Align=center><button class="menu" @click="StaffTimesheet"><span> STAFF TIMESHEET </span></button></p><br>
         <p Align=center><button class="staffmenu" @click="shiftSchedule"><span><img src="setting.png" width=9%> Manage Timesheet </span></button></p><br>
         <p Align=center><button class="staffmenu" @click="operation"><span><img src="setting.png" width=9%> Edit Settings </span></button></p><br>
+
+        <br><br>
+        <p Align=center><LogoutBotton /></p>
       </div>
 
       <div class="content">

@@ -135,8 +135,12 @@ export default {
           Nstart: this.startDate,
           Nend: this.endDate
         };
+
+        console.log('Sending form data:', formData); 
+
         axios.post('http://localhost:3000/editoperation', formData)
         .then((response) => {
+          console.log('Response from server:', response);
           this.openPopup();
         })
         .catch((error) => {

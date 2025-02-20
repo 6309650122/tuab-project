@@ -15,19 +15,19 @@ router.post('/', jsonParser, function(req, res, next) {
   }
 
   connection.execute(
-    "UPDATE operationDay SET startDate = ?, endDate = ? WHERE operationID = ?",
-    [Nstart, Nend, opID],
+    "INSERT INTO operationDay (startDate, endDate) VALUES (?, ?)",
+    [Nstart, Nend],
     (err, results) => {
       if (err) {
         console.error('Error updating status for user:', err);
         return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
       }
   
-      if (results.affectedRows === 0) {
-        return res.status(404).json({ status: 'error', message: 'User not found' });
+      if (results.insertId) {
+        res.json({ status: 'ok', message: 'Operation added successfully', operationID: results.insertId });
+      } else {
+        res.status(400).json({ status: 'error', message: 'Failed to add operation' });
       }
-  
-      res.json({ status: 'ok', message: 'edit operation successfully' });
     }
   );
 

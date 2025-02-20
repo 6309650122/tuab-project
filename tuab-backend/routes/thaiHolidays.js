@@ -6,7 +6,7 @@ router.get('/', async (req, res) => {
   try {
     // ดึงข้อมูลวันหยุดจาก PublicHolidays API
     const response = await axios.get(
-      `https://holidayapi.com/v1/holidays?pretty&key=ad923a56-70d3-42c8-af7a-800020f1259d&country=TH&year=2023`
+      `https://holidayapi.com/v1/holidays?pretty&key=ad923a56-70d3-42c8-af7a-800020f1259d&country=TH&year=2024`
     );
 
     // ตรวจสอบว่า API ส่งข้อมูลวันหยุดได้ถูกต้องหรือไม่

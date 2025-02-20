@@ -141,7 +141,7 @@ body {
     height: 45px;
     margin-left: 5%;
     margin-bottom: 4%;
-    pointer-events: none;
+    pointer-events: auto;
     }
     
     /* Booked round */
