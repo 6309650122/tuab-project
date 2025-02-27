@@ -3,7 +3,9 @@
     <body>
       <div class="menubar">
         <div class="namebar">
-          <h3>{{roleName}}: {{name}}</h3>
+          <h3>{{roleName}}: {{name}}
+            <img v-if="roleName === 'Staff'" src="/crown.png" width="20x" height="20px"> 
+          </h3>
         </div>
         <br><br>
         <p Align=center><LogoutBotton /></p>

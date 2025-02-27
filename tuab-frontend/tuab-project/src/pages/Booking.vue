@@ -2,8 +2,12 @@
   <div class="container">
     <body>
       <div class="menubar">
-        <div class="namebar">
-          <h3>{{roleName}}: {{name}}</h3>
+        <div class="namebar" :style="namebarStyle">
+          <h3>{{roleName}}: {{name}}
+            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+            <img v-else-if="roleName === 'Staff'" src="/crown.png" width="20x" height="20px"> 
+          </h3>
         </div>
         <br><br>
         <p Align=center><button class="backbtn" @click="backhome"><span> BACK </span></button></p><br>
@@ -191,6 +195,15 @@ export default {
 
     // Set the maximum date to tomorrow
     this.maxDate = tomorrow.toISOString().split('T')[0];
+  },
+  computed: {
+    namebarStyle() {
+      if (this.roleName === "Super Staff" || this.roleName === "Staff") {
+        return { backgroundColor: '#90f2e3' };
+      } else {
+        return { backgroundColor: '#F9D871'};
+      }
+    }
   },
   mixins: [NotToken],
 }

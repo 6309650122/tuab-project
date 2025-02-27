@@ -2,8 +2,12 @@
   <div class="container">
     <body>
       <div class="menubar">
-        <div class="namebar">
-          <h4>{{roleName}}: {{name}}</h4>
+        <div class="namebar" :style="namebarStyle">
+          <h3>{{roleName}}: {{name}}
+            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+            <img v-else-if="roleName === 'Staff'" src="/crown.png" width="20x" height="20px"> 
+          </h3>
         </div>
         <br><br>
         <p Align=center><button class="backbtn" @click="backbook"><span> BACK </span></button></p><br>
@@ -127,6 +131,15 @@ export default {
 
     if (this.tel) {
       this.status = false;
+    }
+  },
+  computed: {
+    namebarStyle() {
+      if (this.roleName === "Super Staff" || this.roleName === "Staff") {
+        return { backgroundColor: '#90f2e3' };
+      } else {
+        return { backgroundColor: '#F9D871'};
+      }
     }
   },
 }

@@ -3,7 +3,10 @@
     <body>
       <div class="menubar">
         <div class="namebar">
-            <h4>{{roleName}}: {{name}}</h4>
+            <h4>{{roleName}}: {{name}}
+              <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+              <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+            </h4>
         </div>
         <br><br>
         <p Align=center><button class="backbtn" @click="backhome"><span> BACK </span></button></p><br>

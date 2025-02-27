@@ -3,7 +3,10 @@
     <body>
       <div class="menubar">
         <div class="namebar">
-          <h3>{{roleName}}: {{name}}</h3>
+          <h3>{{roleName}}: {{name}}
+            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+          </h3>
         </div>
         <br><br>
         <p Align=center><button class="menu" @click="booking"><span> BOOK NOW </span></button></p><br>
@@ -66,7 +69,7 @@
 import axios from 'axios';
 import NotToken from '../components/NotToken.vue';
 import LogoutBotton from '../components/LogoutBotton.vue';
-import StaffTimesheet from './StaffTimesheet.vue';
+
 export default {
   components:{
     LogoutBotton

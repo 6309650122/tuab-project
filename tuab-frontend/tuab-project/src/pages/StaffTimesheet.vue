@@ -1,8 +1,12 @@
 <template>
     <div class="container">
       <div class="menubar">
-        <div class="namebar">
-          <h4>{{ roleName }}: {{ name }}</h4>
+        <div class="namebar" :style="namebarStyle">
+          <h4>{{ roleName }}: {{ name }}
+            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+            <img v-else-if="roleName === 'Staff'" src="/crown.png" width="20x" height="20px"> 
+          </h4>
         </div>
         <br><br>
         <p align="center">
@@ -111,6 +115,15 @@
       // Set the maximum date from localStorage (if available)
       this.maxDate = localStorage.getItem('endDate') || '';
     },
+    computed: {
+    namebarStyle() {
+      if (this.roleName === "Super Staff" || this.roleName === "Staff") {
+        return { backgroundColor: '#90f2e3' };
+      } else {
+        return { backgroundColor: '#F9D871'};
+      }
+    }
+  },
     mixins: [NotToken],
   }
   </script>
