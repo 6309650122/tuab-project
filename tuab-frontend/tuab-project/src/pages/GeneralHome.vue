@@ -16,6 +16,15 @@
       <div class="content">
         <br><br><br>
         <h1>Welcome to TU Archery Booking system</h1><br>
+        <center>
+        <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&ctz=Asia%2FBangkok&showPrint=0&src=Y18xYzgyMzNiMjVlZmRjNWJlMDAzOGI0NWRkZjhkY2ExMDJjY2MzMjY4OTA5NjAyYTcyNTNlZmIwMDhmZTE2NjE5QGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20&src=ZW4udGgjaG9saWRheUBncm91cC52LmNhbGVuZGFyLmdvb2dsZS5jb20&color=%23039BE5&color=%23D50000"
+        width="600" 
+        height="500" 
+        frameborder="0" 
+        scrolling="no">
+        </iframe>
+        </center>
+        <br>
         <h4>1. Book the Archery range, click BOOK NOW</h4><br>
         <h4>2. Cancel your booking, click CANCEL BOOKING</h4><br>
         <h4>3. Recheck your booking history, click BOOKING HISTORY</h4><br>

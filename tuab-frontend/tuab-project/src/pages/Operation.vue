@@ -82,7 +82,7 @@ export default {
   methods: {
     async fetchHolidays() {
     try {
-      const response = await axios.get('http://localhost:3000/thaiHolidays');
+      const response = await axios.get('http://localhost:3000/holidays');
       this.holidays = response.data.holidays
         .filter(holiday => holiday.public)  // กรองเฉพาะวันหยุดที่ public: true
         .map(holiday => holiday.date);      // เก็บแค่วันที่

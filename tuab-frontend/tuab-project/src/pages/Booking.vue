@@ -100,6 +100,10 @@ export default {
         shift: shiftId
       }
 
+      const friendName = this.friendName || null;
+      const friendID = this.friendID || null;
+      const friendTel = this.friendTel || null;
+
       this.$router.push({path: '/verify-info', query: dataToSend,});
     },
     async submitForm() {

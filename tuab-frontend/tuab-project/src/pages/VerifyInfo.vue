@@ -2,28 +2,64 @@
   <div class="container">
     <body>
       <div class="menubar">
-        <div class="namebar" :style="namebarStyle">
-          <h3>{{roleName}}: {{name}}
-            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
-            <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
-            <img v-else-if="roleName === 'Staff'" src="/crown.png" width="20x" height="20px"> 
-          </h3>
+        <div class="namebar"  :style="namebarStyle">
+          <h4>{{roleName}}: {{name}}
+              <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+              <img v-if="roleName === 'Super Staff'" src="/crown.png" width="20x" height="20px"> 
+          </h4>
         </div>
         <br><br>
         <p Align=center><button class="backbtn" @click="backbook"><span> BACK </span></button></p><br>
       </div>
 
       <div class="content" v-if="status">
-        <br><br><br>
+        <br><br>
         <h1>You are about to book an archery lane</h1><br>
         <h2>Please verify the following information before proceed.</h2><br><br><br>
-        <h2>Date</h2><div class="info"> {{date}} </div><br><br>
-        <h2>Lane</h2><div class="info"> {{Tlane}} </div><br><br>
-        <h2>Time</h2><div class="info"> {{Rshift}} </div><br><br>
-        <h2>Name</h2><div class="info"> {{name}} </div><br><br>
-        <h2>Student ID</h2><div class="info"> {{username}} </div><br><br>
-        <h2>Tel Number</h2><input type="text" v-model="tel" maxlength="10"><br>
-        <h3>Please fill-in and verify your tel number (example: 0812345678)*</h3><br>
+        <div class="line">
+        <h2>Date:</h2> <span class="info">{{ date }}</span>
+        <h2>Time:</h2> <span class="info">{{ Rshift }}</span>
+        </div>
+
+        <div class="line">
+        <h2>Lane:</h2> <span class="info">{{ Tlane }}</span>
+        <h2>Name:</h2> <span class="info">{{ name }}</span>
+        </div>
+
+        <div class="line">
+        <h2>Student ID:</h2> <span class="info">{{ username }}</span><br>
+        </div>
+
+        <div class="line">
+        <h2>Tel Number:</h2> <input type="text" v-model="tel" maxlength="10"> 
+        <h3>Please fill-in your tel number (example: 0812345678)*</h3>
+        </div>
+
+        <div class="line">
+        <h5>Would you like to make a reservation for someone else?</h5>
+        </div>
+
+        <div class="box">
+          <input type="checkbox" id="reserveForFriend" v-model="reserveForFriend" class="small-checkbox">
+        </div>
+
+        <div v-if="reserveForFriend">
+          
+          <div class="line">
+            <h2>Student ID:</h2><input type="text" v-model="friendID">
+          </div>
+
+          <div class="line2">
+            <h2>Name:</h2><input type="text" v-model="friendName">
+          </div>
+
+          <div class="line">
+            <h2>Tel Number:</h2><input type="text" v-model="friendTel" maxlength="10">
+          </div>
+          
+        </div>
+        
+        <br>
         <center><button class="submit" type="submit" @click="payment"><span> NEXT </span></button></center>
         <br><br>
       </div>
@@ -37,6 +73,9 @@
         <h2>Student ID</h2><div class="info"> {{username}} </div><br><br>
         <h2>Tel Number</h2><div class="info"> {{tel}} </div><br>
         <h3>Please fill-in and verify your tel number (example: 0812345678)*</h3><br>
+
+
+
         <center><button class="submit" type="submit" @click="payment"><span> NEXT </span></button></center>
         <br><br>
       </div>
@@ -57,20 +96,29 @@ export default {
       tel: '',
       date: '',
       Tlane: '',
-      Rshift: ''
+      Rshift: '',
+      reserveForFriend: false,
+      friendName: '',
+      friendID: '',
+      friendTel: ''
     };
   },
   methods: {
     backbook () {
       this.$router.push('/booking')
     },
+
     payment () {
       const { date, lane, shift } = this;
       const formData = {
         date: this.date,
         lane: this.lane,
         username: this.username,
-        shift: this.shift
+        shift: this.shift,
+        reserveForOther: this.reserveForOther,
+        friendName: this.friendName || null,
+        friendID: this.friendID || null,
+        friendTel: this.friendTel || null
       };
       localStorage.setItem("date", date)
       localStorage.setItem("lane", lane)
@@ -102,6 +150,15 @@ export default {
       this.$router.push('/payment')
     }
   },
+  computed: {
+    namebarStyle() {
+      if (this.roleName === "Super Staff" || this.roleName === "Staff") {
+        return { backgroundColor: '#90f2e3' };
+      } else {
+        return { backgroundColor: '#F9D871'};
+      }
+    }
+  },
   mixins: [NotToken],
   mounted() {
     const { date, lane, shift } = this.$route.query;
@@ -131,15 +188,6 @@ export default {
 
     if (this.tel) {
       this.status = false;
-    }
-  },
-  computed: {
-    namebarStyle() {
-      if (this.roleName === "Super Staff" || this.roleName === "Staff") {
-        return { backgroundColor: '#90f2e3' };
-      } else {
-        return { backgroundColor: '#F9D871'};
-      }
     }
   },
 }

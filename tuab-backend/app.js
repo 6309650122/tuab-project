@@ -29,7 +29,8 @@ var editoperationRouter = require('./routes/editoperation');
 var checkBookForPayRouter = require('./routes/checkBookForPay');
 var checkSlipRouter = require('./routes/checkSlip');
 var filterBookMonthRouter = require('./routes/filterBookMonth');
-var holidaysRouter = require('./routes/thaiHolidays')
+var holidaysRouter = require('./routes/holidays');
+var googleholidaysRouter = require('./routes/googleholidays');
 var staffScheduleRouter = require('./routes/staffTimesheet');
 
 var app = express();
@@ -67,7 +68,8 @@ app.use('/editoperation', editoperationRouter);
 app.use('/checkBookForPay', checkBookForPayRouter);
 app.use('/checkSlip', checkSlipRouter);
 app.use('/filterBookMonth', filterBookMonthRouter);
-app.use('/thaiHolidays', holidaysRouter); 
+app.use('/holidays', holidaysRouter); 
+app.use('/googleholidays', googleholidaysRouter);
 app.use('/staffTimesheet', staffScheduleRouter);
 
 // catch 404 and forward to error handler

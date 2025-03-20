@@ -11,6 +11,11 @@ var connection = require('../connection/db.js');
 router.get('/', jsonParser, function(req, res, next) {
   const { workDate } = req.query;
 
+  // ตรวจสอบ workDate
+  if (!workDate) {
+    return res.status(400).json({ error: 'workDate is required' });
+  }
+
   connection.execute("SELECT targetLaneID, shiftID, DATE_FORMAT(bookingDate, '%Y-%m-%d') AS bookingDate, bookingStatusID FROM Booking WHERE bookingDate = ?",
     [workDate],
     (err, rows) => {

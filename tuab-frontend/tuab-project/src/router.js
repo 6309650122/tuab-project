@@ -5,7 +5,7 @@ import GeneralHome from './pages/GeneralHome.vue'
 import SuperStaffHome from './pages/SuperStaffHome.vue'
 import StaffHome from './pages/StaffHome.vue'
 import Booking from './pages/Booking.vue'
-import VerifyInFo from './pages/VerifyInFo.vue'
+import VerifyInfo from './pages/VerifyInfo.vue'
 import Payment from './pages/Payment.vue'
 import History from './pages/History.vue'
 import AddPayment from './pages/AddPayment.vue'
@@ -14,7 +14,7 @@ import Operation from './pages/Operation.vue'
 import ShiftSchedule from './pages/ShiftSchedule.vue'
 import StaffTimesheet from './pages/StaffTimesheet.vue'
 import FullCalendar from './pages/FullCalendar.vue'
-
+import BaseCalendar from './pages/BaseCalendar.vue'
 
 Vue.use(Router)
 
@@ -49,7 +49,7 @@ export default new Router({
     {
         path: '/verify-info',
         name: 'verify-info',
-        component: VerifyInFo
+        component: VerifyInfo
     },
     {
         path: '/payment',
@@ -90,6 +90,11 @@ export default new Router({
         path: '/full-calendar',
         name: 'FullCalendar',
         component: FullCalendar
+    },
+    {
+        path: '/base-calendar',
+        name: 'BaseCalendar',
+        component: BaseCalendar
     }
     ]
 })
