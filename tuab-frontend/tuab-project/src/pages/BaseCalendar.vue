@@ -6,32 +6,8 @@
         <button @click="changeMonth(1)" class="btn-nav">&gt;</button>
       </div>
   
-      <div class="role-info" style="text-align: center; margin-bottom: 10px; padding: 5px; background-color: #f5f5f5; border-radius: 4px;">
-        Role: {{ roleName }} 
-      </div>
-      
-      <div class="calendar-legend">
-        <div class="legend-item">
-          <span class="legend-color bg-green"></span>
-          <span>เปิดทำการ (คลิกเพื่อจอง)</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-color bg-red"></span>
-          <span>วันหยุดนักขัตฤกษ์</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-color bg-gray"></span>
-          <span>ปิดทำการ</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-color bg-special"></span>
-          <span>วันพิเศษ (คลิกเพื่อจอง)</span>
-        </div>
-      </div>
-      
-      <div v-if="roleName === 'Super Staff' || roleName === 'Staff'" class="staff-controls">
-        <button @click="showHolidayModal = true" class="btn-manage">จัดการวันหยุด</button>
-      </div>
+      <!-- ตำแหน่งสำหรับเนื้อหาด้านบนปฏิทิน -->
+      <slot name="above-calendar"></slot>
       
       <div class="calendar-grid">
         <!-- วันในสัปดาห์ - เริ่มต้นจากวันอาทิตย์ -->
@@ -43,92 +19,75 @@
         <div
           v-for="(day, index) in calendarDays"
           :key="index"
-          :class="[
-            'calendar-day',
-            { 'special-bookable-day': day.isSpecialBookableDay },
-            { 'outside-month': day.isOutsideMonth },
-            { 'closed-day': day.isClosed },
-            { 'holiday-day': day.isHoliday },
-            { 'special-day': day.isSpecialDay && !day.isHoliday && !day.isClosed && !day.isSpecialBookableDay },
-            { 'open-day': !day.isOutsideMonth && !day.isClosed && !day.isHoliday && !day.isSpecialDay },
-          ]"
+          :class="getDayClasses(day)"
           @click="handleDateClick(day)"
-          :title="day.isHoliday ? day.holidayName : day.isSpecialDay ? day.specialDayName : ''"
+          :title="getDayTitle(day)"
         >
           <div class="day-number">{{ day.date.getDate() }}</div>
-          <div v-if="day.isHoliday" class="holiday-name">{{ day.holidayName }}</div>
-          <div v-else-if="day.isSpecialDay" class="special-day-name">{{ day.specialDayName }}</div>
+          <slot name="day-content" :day="day"></slot>
         </div>
       </div>
   
-      <!-- Modal สำหรับจัดการวันหยุด (สำหรับ Staff) -->
-      <div v-if="showHolidayModal && (roleName === 'Super Staff' || roleName === 'Staff')" class="holiday-modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>จัดการวันหยุด</h3>
-            <button @click="showHolidayModal = false" class="btn-close">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="holiday-list">
-              <h4>วันหยุดปัจจุบัน</h4>
-              <div v-if="holidays.length === 0" class="no-holidays">ไม่มีวันหยุดที่กำหนดเพิ่มเติม</div>
-              <ul v-else>
-                <li v-for="(holiday, index) in holidays" :key="index" class="holiday-item">
-                  <div class="holiday-info">
-                    <span>{{ formatDate(holiday.date) }}: {{ holiday.name }}</span>
-                  </div>
-                  <button @click="removeHoliday(holiday.id)" class="btn-remove">ลบ</button>
-                </li>
-              </ul>
-            </div>
-            
-            <div class="add-holiday-form">
-              <h4>เพิ่มวันหยุดใหม่</h4>
-              <div class="form-group">
-                <label for="holidayDate">วันที่:</label>
-                <input type="date" id="holidayDate" v-model="newHoliday.date" class="form-control">
-              </div>
-              <div class="form-group">
-                <label for="holidayName">ชื่อวันหยุด:</label>
-                <input type="text" id="holidayName" v-model="newHoliday.name" class="form-control" placeholder="เช่น วันหยุดพิเศษ">
-              </div>
-              <button @click="addHoliday" class="btn-add">เพิ่มวันหยุด</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- ตำแหน่งสำหรับเนื้อหาด้านล่างปฏิทิน -->
+      <slot name="below-calendar"></slot>
     </div>
   </template>
   
   <script>
   import NotToken from '../components/NotToken.vue';
-  
   export default {
-    name: 'ArcheryBookingCalendar',
+    name: 'BaseCalendar',
+    props: {
+      // ค่าเริ่มต้นสำหรับวันที่ปัจจุบัน
+      initialDate: {
+        type: Date,
+        default: () => new Date()
+      },
+      // ชื่อวันในสัปดาห์
+      weekDayLabels: {
+        type: Array,
+        default: () => ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']
+      },
+      // ฟังก์ชันสำหรับตรวจสอบว่าวันนั้นปิดทำการหรือไม่
+      isClosedFunction: {
+        type: Function,
+        default: (date) => date.getDay() === 0 || date.getDay() === 6 // ค่าเริ่มต้นคือวันเสาร์และวันอาทิตย์
+      },
+      // วันหยุด
+      holidays: {
+        type: Array,
+        default: () => []
+      },
+      // วันพิเศษ
+      specialDays: {
+        type: Array,
+        default: () => []
+      },
+      // ฟังก์ชันสำหรับแสดงชื่อวันหยุดหรือวันพิเศษ
+      getDayTitleFunction: {
+        type: Function,
+        default: null
+      },
+      // ฟังก์ชันสำหรับกำหนด class ของวัน
+      getDayClassesFunction: {
+        type: Function,
+        default: null
+      },
+      // ฟังก์ชันสำหรับตรวจสอบว่าวันนั้นเลือกได้หรือไม่
+      isDateSelectableFunction: {
+        type: Function,
+        default: null
+      }
+    },
     data() {
       return {
-        roleName: '',
-        currentDate: new Date(),
-        selectedDate: null,
-        // เปลี่ยนลำดับวันในสัปดาห์ให้เริ่มจากวันอาทิตย์ตาม requirement
-        weekDays: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
-        // วันหยุดนักขัตฤกษ์ (จะถูกโหลดจาก API)
-        holidays: [], // วันหยุดที่กำหนดเพิ่มเติม
-        thaiHolidays: [], // วันหยุดราชการ
-        specialDays: [], //วันพิเศษ วันวาเลนไทน์ วันฮาโลวีน
-        buddhistHolidays: [], // วันหยุดทางศาสนา/วัฒนธรรม
-        showHolidayModal: false,
-        type: 'holiday',
-        newHoliday: {
-          date: '',
-          name: '',
-          isRecurring: false
-        }
+        currentDate: new Date(this.initialDate),
+        selectedDate: null
       }
     },
     computed: {
-      canManageHolidays() {
-        return this.roleName === 'Super Staff' || this.roleName === 'Staff';
+      weekDays() {
+        return this.weekDayLabels;
       },
       currentMonthName() {
         const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
@@ -157,145 +116,95 @@
         
         const days = [];
         let day = new Date(startDate);
-  
-        console.log('Special days:', this.specialDays)
         
         while (day <= endDate) {
-        const isOutsideMonth = day.getMonth() !== this.currentDate.getMonth();
-        const isClosed = this.isFieldClosed(day);
-        const isHoliday = this.isHoliday(day);
-        const isSpecialDay = this.isSpecialDay(day);
-        const holidayName = isHoliday ? this.getHolidayName(day) : '';
-        const specialDayName = isSpecialDay ? this.getSpecialDayName(day) : '';
-  
-        // คำนวณ isSpecialBookableDay ให้ถูกต้อง
-        const isSpecialBookableDay = isSpecialDay && !isHoliday && !isClosed && !isOutsideMonth;
+          const isOutsideMonth = day.getMonth() !== this.currentDate.getMonth();
+          const isClosed = this.isClosedFunction ? this.isClosedFunction(day) : false;
+          const isHoliday = this.isHoliday(day);
+          const isSpecialDay = this.isSpecialDay(day);
+          const holidayName = isHoliday ? this.getHolidayName(day) : '';
+          const specialDayName = isSpecialDay ? this.getSpecialDayName(day) : '';
           
-          // เพิ่ม log เพื่อตรวจสอบวันพิเศษเฉพาะ
-          if (isSpecialDay) {
-            console.log('Special day found:', {
-              date: day.toISOString().split('T')[0],
-              name: specialDayName,
-              isHoliday,
-              isClosed,
-              isOutsideMonth,
-              isSpecialBookableDay
-            });
-          }
+          // คำนวณ isSpecialBookableDay
+          const isSpecialBookableDay = isSpecialDay && !isHoliday && !isClosed && !isOutsideMonth;
+          
+          days.push({
+            date: new Date(day),
+            isOutsideMonth,
+            isClosed,
+            isHoliday,
+            isSpecialDay,
+            isSpecialBookableDay,
+            holidayName,
+            specialDayName
+          });
+          
+          day.setDate(day.getDate() + 1);
+        }
         
-        days.push({
-          date: new Date(day),
-          isOutsideMonth,
-          isClosed,
-          isHoliday,
-          isSpecialDay,
-          isSpecialBookableDay,
-          holidayName,
-          specialDayName
-        });
-        
-        day.setDate(day.getDate() + 1);
-    }
-      return days;
+        return days;
       }
     },
     methods: {
-      isFieldClosed(date) {
-        // วันเสาร์ (6) และ วันอาทิตย์ (0) = ปิด
-        return date.getDay() === 0 || date.getDay() === 6;
+      async changeMonth(increment) {
+        const newDate = new Date(this.currentDate);
+        newDate.setMonth(newDate.getMonth() + increment);
+        this.currentDate = newDate;
+        
+        // ส่ง event เมื่อเปลี่ยนเดือน
+        this.$emit('month-changed', {
+          year: newDate.getFullYear(),
+          month: newDate.getMonth(),
+          date: new Date(newDate)
+        });
       },
-  
+      handleDateClick(day) {
+        // ตรวจสอบว่าวันนี้เลือกได้หรือไม่
+        if (this.isDateSelectableFunction) {
+          if (!this.isDateSelectableFunction(day)) {
+            return; // ถ้าเลือกไม่ได้ ไม่ทำอะไร
+          }
+        } else {
+          // ตรรกะเริ่มต้น
+          if (!((!day.isOutsideMonth && !day.isClosed && !day.isHoliday) || day.isSpecialBookableDay)) {
+            return;
+          }
+        }
+        
+        this.selectedDate = day.date;
+        
+        // ส่ง event เมื่อเลือกวัน
+        this.$emit('date-selected', {
+          date: day.date,
+          formattedDate: this.formatDateParam(day.date),
+          day: day
+        });
+      },
       isHoliday(date) {
-        if (this.isSpecialDay(date)) {
-        return false;
-    }
-        // ตรวจสอบทั้งวันหยุดราชการ วันหยุดทางศาสนา และวันหยุดที่กำหนดเพิ่มเติม
-        // แต่ไม่รวมวันพิเศษ
-        return this.thaiHolidays.some(holiday => 
-          this.isSameDate(new Date(holiday.date), date)
-        ) || this.buddhistHolidays.some(holiday => 
-          this.isSameDate(new Date(holiday.date), date)
-        ) || this.holidays.some(holiday => 
+        // ตรวจสอบว่าเป็นวันหยุดหรือไม่
+        return this.holidays.some(holiday => 
           this.isSameDate(new Date(holiday.date), date)
         );
       },
-  
-      isSameDate(date1, date2) {
-        return date1.getDate() === date2.getDate() && 
-               date1.getMonth() === date2.getMonth() && 
-               date1.getFullYear() === date2.getFullYear();
-      },
-  
-      // ตรวจสอบว่าเป็นวันพิเศษหรือไม่
-      isSpecialDay(date) {
-        return this.specialDays.some(day => 
-          this.isSameDate(new Date(day.date), date)
-        );
-      },
-  
-      getHolidayName(date) {
-        // ตรวจสอบวันหยุดราชการ
-        const thaiHoliday = this.thaiHolidays.find(h => 
-          this.isSameDate(new Date(h.date), date)
-        );
-        
-        if (thaiHoliday) return thaiHoliday.name;
-        
-        // ตรวจสอบวันหยุดทางศาสนา
-        const buddhistHoliday = this.buddhistHolidays.find(h => 
-          this.isSameDate(new Date(h.date), date)
-        );
-        
-        if (buddhistHoliday) return buddhistHoliday.name;
-        
-        // ตรวจสอบวันหยุดที่กำหนดเพิ่มเติม
-        const customHoliday = this.holidays.find(h => 
-          this.isSameDate(new Date(h.date), date)
-        );
-        
-        return customHoliday ? customHoliday.name : "";
-      },
-      // เพิ่มวันพิเศษ (ไม่ใช่วันหยุด)
-      addSpecialDays(year) {
-        // เคลียร์ข้อมูลเก่า
-        this.specialDays = [];
-        
-        // วันวาเลนไทน์ - 14 กุมภาพันธ์
-        this.specialDays.push({
-          date: new Date(year, 1, 14),
-          name: 'วันวาเลนไทน์',
-          type: 'special'
-        });
-        
-        // วันฮาโลวีน - 31 ตุลาคม
-        this.specialDays.push({
-          date: new Date(year, 9, 31),
-          name: 'วันฮาโลวีน',
-          type: 'special'
-        });
-  
-        this.specialDays.push({
-          date: new Date(year, 11, 24),
-          name: 'วันคริสต์มาสอีฟ',
-          type: 'special'
-        });
-        
-        // เพิ่มวันพิเศษอื่นๆ ตามต้องการ...
-        // วันคริสต์มาส
-        this.specialDays.push({
-          date: new Date(year, 11, 25),
-          name: 'วันคริสต์มาส',
-          type: 'special'
-        });
-      },
-  
       isSpecialDay(date) {
         // ตรวจสอบว่าเป็นวันพิเศษหรือไม่
         return this.specialDays.some(day => 
           this.isSameDate(new Date(day.date), date)
         );
       },
-  
+      isSameDate(date1, date2) {
+        return date1.getDate() === date2.getDate() && 
+               date1.getMonth() === date2.getMonth() && 
+               date1.getFullYear() === date2.getFullYear();
+      },
+      getHolidayName(date) {
+        // หาชื่อวันหยุด
+        const holiday = this.holidays.find(h => 
+          this.isSameDate(new Date(h.date), date)
+        );
+        
+        return holiday ? holiday.name : "";
+      },
       getSpecialDayName(date) {
         // หาชื่อวันพิเศษ
         const specialDay = this.specialDays.find(day => 
@@ -304,172 +213,49 @@
         
         return specialDay ? specialDay.name : "";
       },
-      async changeMonth(increment) {
-        const newDate = new Date(this.currentDate);
-        newDate.setMonth(newDate.getMonth() + increment);
-        this.currentDate = newDate;
+      getDayClasses(day) {
+        // ใช้ฟังก์ชันที่ส่งมาจาก props ถ้ามี
+        if (this.getDayClassesFunction) {
+          return this.getDayClassesFunction(day);
+        }
         
-        // โหลดข้อมูลวันหยุดใหม่เมื่อเปลี่ยนปี
-        if (this.currentDate.getFullYear() !== new Date().getFullYear()) {
-          await this.loadHolidays(this.currentDate.getFullYear());
-        }
+        // ตรรกะเริ่มต้น
+        return [
+          'calendar-day',
+          { 'special-bookable-day': day.isSpecialBookableDay },
+          { 'outside-month': day.isOutsideMonth },
+          { 'closed-day': day.isClosed },
+          { 'holiday-day': day.isHoliday },
+          { 'special-day': day.isSpecialDay && !day.isHoliday && !day.isClosed && !day.isSpecialBookableDay },
+          { 'open-day': !day.isOutsideMonth && !day.isClosed && !day.isHoliday && !day.isSpecialDay }
+        ];
       },
-      handleDateClick(day) {
-        if ((!day.isOutsideMonth && !day.isClosed && !day.isHoliday) || day.isSpecialBookableDay) {
-          this.selectedDate = day.date;
-          // นำทางไปยังหน้าจอง
-          const formattedDate = this.formatDateParam(day.date);
-          console.log(`นำทางไปยังหน้าจองสำหรับวันที่ ${formattedDate}`);
-          
-          // ใช้ Vue Router เพื่อนำทางไปยังหน้าจอง
-          this.$router.push({
-            name: 'booking',
-            params: { date: formattedDate }
-          });
+      getDayTitle(day) {
+        // ใช้ฟังก์ชันที่ส่งมาจาก props ถ้ามี
+        if (this.getDayTitleFunction) {
+          return this.getDayTitleFunction(day);
         }
-      },
-      formatDate(dateString) {
-        const date = new Date(dateString);
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return date.toLocaleDateString('th-TH', options);
+        
+        // ตรรกะเริ่มต้น
+        if (day.isHoliday) return day.holidayName;
+        if (day.isSpecialDay) return day.specialDayName;
+        return '';
       },
       formatDateParam(date) {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      },
-      addHoliday() {
-        if (this.newHoliday.date && this.newHoliday.name) {
-          // เพิ่มวันหยุดใหม่ด้วย API
-          const holidayData = {
-            date: this.newHoliday.date,
-            name: this.newHoliday.name,
-            isRecurring: this.newHoliday.isRecurring
-          };
-          
-          // ส่งข้อมูลไปยัง API
-          const dayOffUrl = 'http://localhost:3000/holidays';
-          fetch(dayOffUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(holidayData)
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            console.log('เพิ่มวันหยุดเรียบร้อยแล้ว', data);
-            // โหลดข้อมูลวันหยุดใหม่
-            this.loadCustomHolidays();
-            
-            // รีเซ็ตฟอร์ม
-            this.newHoliday = {
-              date: '',
-              name: '',
-              isRecurring: false
-            };
-          })
-          .catch(error => {
-            console.error('เกิดข้อผิดพลาดในการเพิ่มวันหยุด', error);
-            alert('เกิดข้อผิดพลาดในการเพิ่มวันหยุด: ' + error.message);
-          });
-        }
-      },
-      removeHoliday(id) {
-        // ลบวันหยุดด้วย API
-        const dayOffUrl = `http://localhost:3000/holidays/${id}`;
-        fetch(dayOffUrl, {
-          method: 'DELETE'
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('ลบวันหยุดเรียบร้อยแล้ว', data);
-          // โหลดข้อมูลวันหยุดใหม่
-          this.loadCustomHolidays();
-        })
-        .catch(error => {
-          console.error('เกิดข้อผิดพลาดในการลบวันหยุด', error);
-          alert('เกิดข้อผิดพลาดในการลบวันหยุด: ' + error.message);
-        });
-      },
-        async loadHolidays(year = null) {
-        const currentYear = year || this.currentDate.getFullYear();
-        console.log('Loading holidays for year:', currentYear);
-        
-        try {
-          // ดึงข้อมูลวันหยุดจาก Google Calendar API
-          const response = await fetch(`http://localhost:3000/googleholidays?year=${currentYear}`);
-          
-          if (!response.ok) {
-            throw new Error(`Request failed with status ${response.status}`);
-          }
-          
-          const googleHolidays = await response.json();
-          
-          // แยกประเภทวันหยุด
-          this.thaiHolidays = googleHolidays.filter(h => h.type === 'national');
-          this.buddhistHolidays = googleHolidays.filter(h => 
-            h.type === 'buddhist' || h.type === 'cultural'
-          );
-          
-          console.log('Google holidays loaded:', {
-            national: this.thaiHolidays.length,
-            buddhistAndCultural: this.buddhistHolidays.length
-          });
-          
-          // ดึงข้อมูลวันหยุดที่กำหนดเพิ่มเติม
-          await this.loadCustomHolidays(currentYear);
-          
-          // เพิ่มวันพิเศษ (ไม่ใช่วันหยุด)
-          this.addSpecialDays(currentYear);
-        } catch (error) {
-          console.error('Error loading Google holidays:', error);
-          // ใช้ข้อมูลสำรอง
-          this.useDefaultHolidays();
-          // เพิ่มวันพิเศษเข้าไปด้วย
-          this.addSpecialDays(currentYear);
-        }
-      },
-      async loadCustomHolidays(year = null) {
-        const currentYear = year || this.currentDate.getFullYear();
-        
-        try {
-          // URL สำหรับดึงข้อมูลวันหยุดที่กำหนดเพิ่มเติม
-          const dayOffUrl = `http://localhost:3000/holidays?year=${currentYear}`;
-          
-          const response = await fetch(dayOffUrl);
-          if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.statusText);
-          }
-          
-          const data = await response.json();
-          console.log('Custom holidays loaded:', data);
-          
-          // เก็บข้อมูลวันหยุดที่กำหนดเพิ่มเติม
-          this.holidays = data;
-        } catch (error) {
-          console.error('Error loading custom holidays:', error);
-          this.holidays = [];
-        }
-      },
+      }
     },
-    async mounted() {
-      console.log('Calendar component mounted');
-      // โหลดข้อมูลวันหยุดจาก API เมื่อ component ถูกโหลด
-      await this.loadHolidays();
+    watch: {
+      initialDate: {
+        handler(newVal) {
+          this.currentDate = new Date(newVal);
+        }
+      }
     },
     mixins: [NotToken]
   }
   </script>
   
   <style scoped>
-  @import '@/assets/css/Calendar.css';
+    @import '@/assets/css/Calendar.css';
   </style>

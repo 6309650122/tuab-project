@@ -1,6 +1,5 @@
-// routes/holidays.js
 const express = require('express');
-const router = express.Router();
+const router = express.Router();  // ต้องมีบรรทัดนี้เพื่อกำหนดตัวแปร router
 const connection = require('../connection/db.js');
 
 // สำหรับดึงข้อมูลวันหยุดทั้งหมด - endpoint: /holidays
@@ -11,7 +10,7 @@ router.get('/', (req, res) => {
     
     // ดึงข้อมูลวันหยุดที่เกิดซ้ำทุกปี และวันหยุดที่กำหนดเฉพาะปีนั้นๆ
     const query = `
-      SELECT id, day, month, year, name, is_recurring 
+      SELECT id, day, month, year, name, is_recurring, type 
       FROM holidays 
       WHERE (year IS NULL OR year = ?) 
       ORDER BY month, day
@@ -33,7 +32,8 @@ router.get('/', (req, res) => {
           id: row.id,
           date: dateStr,
           name: row.name,
-          isRecurring: row.is_recurring === 1 // แปลงจาก tinyint เป็น boolean
+          isRecurring: row.is_recurring === 1, // แปลงจาก tinyint เป็น boolean
+          type: row.type || 'holiday'
         };
       });
       
@@ -45,21 +45,10 @@ router.get('/', (req, res) => {
   }
 });
 
-// สำหรับตรวจสอบสถานะการเชื่อมต่อฐานข้อมูล
-router.get('/check', (req, res) => {
-  connection.ping((err) => {
-    if (err) {
-      console.error('Database connection error:', err);
-      return res.status(500).json({ error: 'Cannot connect to database', details: err.message });
-    }
-    res.json({ status: 'Connected to database successfully' });
-  });
-});
-
-// API สำหรับเพิ่มวันหยุดใหม่ (รองรับการตั้งค่าซ้ำทุกปี)
+// API สำหรับเพิ่มวันหยุดใหม่
 router.post('/', (req, res) => {
   try {
-    const { date, name, isRecurring } = req.body;
+    const { date, name, isRecurring, type } = req.body;
     
     if (!date || !name) {
       return res.status(400).json({ error: 'กรุณาระบุวันที่และชื่อวันหยุด' });
@@ -73,14 +62,14 @@ router.post('/', (req, res) => {
     
     // เพิ่มข้อมูลลงในฐานข้อมูล
     const query = `
-      INSERT INTO holidays (day, month, year, name, is_recurring)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO holidays (day, month, year, name, is_recurring, type)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
     
-    connection.query(query, [day, month, year, name, isRecurring], (err, result) => {
+    connection.query(query, [day, month, year, name, isRecurring, type || 'holiday'], (err, result) => {
       if (err) {
         console.error('Error adding holiday:', err);
-        return res.status(500).json({ error: 'เกิดข้อผิดพลาดในการเพิ่มวันหยุด' });
+        return res.status(500).json({ error: 'เกิดข้อผิดพลาดในการเพิ่มวันหยุด: ' + err.message });
       }
       
       res.json({ 
@@ -91,11 +80,10 @@ router.post('/', (req, res) => {
     });
   } catch (error) {
     console.error('Error in add holiday route:', error);
-    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการเพิ่มวันหยุด' });
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการเพิ่มวันหยุด: ' + error.message });
   }
 });
 
-// API สำหรับลบวันหยุด
 router.delete('/:id', (req, res) => {
   try {
     const { id } = req.params;

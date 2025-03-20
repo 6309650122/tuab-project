@@ -25,19 +25,40 @@ router.get('/', async (req, res) => {
       // ตรวจสอบประเภทวันหยุด
       let type = 'national';
       const name = event.summary;
+      const description = event.description || '';
       
-      if (name.includes('มาฆบูชา') || name.includes('วิสาขบูชา') || 
-          name.includes('อาสาฬหบูชา') || name.includes('เข้าพรรษา') ||
-          name.includes('ออกพรรษา')) {
+      // ตรวจสอบวันพิเศษที่ไม่ใช่วันหยุด
+      if (
+        name.includes('วันวาเลนไทน์') || 
+        name.includes('วันคริสต์มาส') || 
+        name.includes('วันคริสต์มาสอีฟ') ||
+        name.includes('วันฮาโลวีน')
+      ) {
+        type = 'special';
+      }
+      // ตรวจสอบวันหยุดทางพุทธศาสนา
+      else if (
+        name.includes('มาฆบูชา') || 
+        name.includes('วิสาขบูชา') || 
+        name.includes('อาสาฬหบูชา') || 
+        name.includes('เข้าพรรษา') ||
+        name.includes('ออกพรรษา')
+      ) {
         type = 'buddhist';
-      } else if (name.includes('ลอยกระทง')) {
-        type = 'cultural';
       } 
+      // ตรวจสอบวันหยุดทางวัฒนธรรม
+      else if (name.includes('ลอยกระทง')) {
+        type = 'cultural';
+      }
+      // ตรวจสอบจากคำอธิบาย
+      else if (description && description.includes('วันสำคัญ') && !description.includes('วันหยุดนักขัตฤกษ์')) {
+        type = 'special';
+      }
       
       return {
         date: event.start.date,
         name: event.summary,
-        description: event.description || '',
+        description: description,
         type: type
       };
     });
@@ -47,10 +68,10 @@ router.get('/', async (req, res) => {
     console.error('Error fetching holidays:', error);
     res.status(500).json({ error: 'Failed to fetch holidays' });
   }
+});
 
-  router.get('/test', (req, res) => {
-    res.json({ message: 'Test route works!' });
-  });
+router.get('/test', (req, res) => {
+  res.json({ message: 'Test route works!' });
 });
 
 module.exports = router;
