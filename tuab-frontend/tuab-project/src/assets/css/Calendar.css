@@ -216,6 +216,24 @@
     font-style: italic;
     color: #777;
   }
+
+  .past-date {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+    color: #999;
+    pointer-events: none;
+  }
+  
+  /* ปรับแต่งเพิ่มเติมสำหรับวันหยุดในอดีต */
+  .past-date.holiday-day {
+    opacity: 0.5;
+  }
+  
+  /* ปรับแต่งเพิ่มเติมสำหรับวันพิเศษในอดีต */
+  .past-date.special-day {
+    opacity: 0.5;
+  }
   
   .holiday-item {
     display: flex;
@@ -229,6 +247,29 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .calendar-day.outside-month {
+    background-color: #f7f7f7 !important;
+    color: #aaa !important;
+    cursor: default !important;
+    pointer-events: none !important;
+  }
+  
+  /* ซ่อนข้อความชื่อวันหยุด/วันพิเศษในวันที่อยู่นอกเดือน */
+  .calendar-day.outside-month .holiday-name,
+  .calendar-day.outside-month .special-day-name {
+    display: none !important;
+  }
+  
+  /* ยกเลิกการแสดงสีพื้นหลังของวันหยุดหรือวันพิเศษในวันที่อยู่นอกเดือน */
+  .calendar-day.outside-month.holiday-day,
+  .calendar-day.outside-month.special-day,
+  .calendar-day.outside-month.special-bookable-day,
+  .calendar-day.outside-month.open-day,
+  .calendar-day.outside-month.closed-day {
+    background-color: #f7f7f7 !important;
+    color: #aaa !important;
   }
   
   .recurring-badge {

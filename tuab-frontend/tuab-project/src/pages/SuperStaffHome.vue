@@ -21,37 +21,53 @@
       </div>
 
       <div class="content">
-        <br><br><br>
-        <h1>Welcome to TU Archery Booking system</h1><br>
-        <h4>You're logging-in in Super Staff mode, Please select date to approve the bookings</h4><br>
-        <form @submit.prevent="submitForm">
-          <p Align="center">
-            <input class="datepicker" type="date" v-model="selectedDate" :min="minDate" :max="maxDate">
-            <button class="select" type="submit">Select</button>
-          </p>
-        </form>
-        <br><br>
+        <div class="content-wrapper">
+          <h1>Welcome to TU Archery Booking system</h1>
+          <h4>You're in Super Staff mode. Please select a date on the calendar to view and manage bookings.</h4>
 
-        <!-- Bookings Slot -->
-        <div v-for="(booking, index) in bookings" :key="index" class="slot">
-          <template v-if="booking.bookingStatusID !== 3">
-            <h2>{{ booking.username }}</h2>
-            <name>{{ booking.name }}</name>
-            <t1>(Tel.{{booking.telNumber}})</t1>
-            <h5>{{ booking.shiftID }}</h5>
-            <h5>Lane {{ booking.targetLaneID }}</h5>
-            <button class="slipbtn" @click="showSlip(booking)">Payment</button>
-            <select v-model="selectedStatus[index]" class="status-select" id="status">
-              <option v-if="!selectedStatus[index]" :value="null" disabled selected>Please select one:</option>
-              <option v-for="status in status" :key="status.id" :value="status.id">{{ status.name }}</option>
-            </select>
-            <br>
-          </template>
+          <!-- ใช้ FullCalendar ด้วยโหมด superstaff -->
+          <div class="calendar-container">
+            <FullCalendar mode="superstaff" @date-selected="handleCalendarDateSelect" />
+          </div>
         </div>
-        <center><button class="submit" type="submit" @click="updateStatus">UPDATE</button></center>
       </div>
 
-      <!-- Slip PopUp -->
+      <!-- Booking Management PopUp -->
+      <div class="booking-popup" v-if="showBookingPopup">
+        <div class="booking-popup-content">
+          <div class="booking-popup-header">
+            <h2>Bookings for: {{ formatDisplayDate(selectedDate) }}</h2>
+            <span class="close-btn" @click="closeBookingPopup">&times;</span>
+          </div>
+          <div class="booking-popup-body">
+            <div v-if="bookings.length === 0" class="no-bookings">
+              <p>No bookings for this date.</p>
+            </div>
+            
+            <div v-else>
+              <!-- Bookings Slot -->
+              <div v-for="(booking, index) in bookings" :key="index" class="slot">
+                <template v-if="booking.bookingStatusID !== 3">
+                  <h2>{{ booking.username }}</h2>
+                  <n>{{ booking.name }}</n>
+                  <t1>(Tel.{{booking.telNumber}})</t1>
+                  <h5>{{ booking.shiftID }}</h5>
+                  <h5>Lane {{ booking.targetLaneID }}</h5>
+                  <button class="slipbtn" @click="showSlip(booking)">Payment</button>
+                  <select v-model="selectedStatus[index]" class="status-select" id="status">
+                    <option v-if="!selectedStatus[index]" :value="null" disabled selected>Please select one:</option>
+                    <option v-for="status in status" :key="status.id" :value="status.id">{{ status.name }}</option>
+                  </select>
+                  <br>
+                </template>
+              </div>
+              <center><button class="submit" type="submit" @click="updateStatus">UPDATE</button></center>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Slip PopUp -->
       <div class="popup" id="popup">
         <a class="close" @click="closePopup">X</a>
         <br><br>
@@ -69,16 +85,17 @@
 import axios from 'axios';
 import NotToken from '../components/NotToken.vue';
 import LogoutBotton from '../components/LogoutBotton.vue';
+import FullCalendar from './FullCalendar.vue';
 
 export default {
   components:{
-    LogoutBotton
+    LogoutBotton,
+    FullCalendar
   },
   data() {
     return {
       roleName: '',
       name: '',
-      date: '2018-03-02', // YYYY-MM-DD
       selectedLane: '',
       selectedDate: '', // Selected date
       minDate: '',      // Minimum date
@@ -93,11 +110,29 @@ export default {
       bankName: '',
       accountDigit: '',
       dateATime: '',
-      selectedStatus: []
+      selectedStatus: [],
+      showBookingPopup: false // เพิ่มตัวแปรควบคุมการแสดง popup
     };
   },
   mixins: [NotToken],
   methods: {
+    // รับค่าวันที่จากปฏิทินเมื่อมีการคลิก
+    handleCalendarDateSelect(formattedDate) {
+      console.log("Received date from calendar:", formattedDate);
+      this.selectedDate = formattedDate;
+      this.fetchBookings(); // เรียกฟังก์ชันเพื่อดึงข้อมูลการจองสำหรับวันที่เลือก
+    },
+    
+    // แสดงวันที่ในรูปแบบที่อ่านง่าย
+    formatDisplayDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('th-TH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    },
+    
     booking() {
       this.$router.replace("booking");
     },
@@ -136,7 +171,14 @@ export default {
     closePopup(){
       popup.classList.remove('open-popup')
     },
-    submitForm() {
+    
+    // ปิด popup การจัดการการจอง
+    closeBookingPopup() {
+      this.showBookingPopup = false;
+    },
+    
+    // ดึงข้อมูลการจองและแสดง popup
+    fetchBookings() {
       axios.get('http://localhost:3000/checkBookStaff', { params: { date: this.selectedDate } })
       .then(response => {
         this.bookings = response.data;
@@ -146,11 +188,15 @@ export default {
             this.selectedStatus[index] = 2;
           }
         });
+        
+        // แสดง popup หลังจากดึงข้อมูลเสร็จ
+        this.showBookingPopup = true;
       })
       .catch(error => {
         console.error('Error fetching bookings:', error);
       });
     },
+    
     fetchOperation() {
       axios.get('http://localhost:3000/checkoperation')
       .then(response => {
@@ -171,6 +217,10 @@ export default {
         alert('Please select a status for each booking');
         return;
       }
+      
+      let updateCount = 0;
+      const totalUpdates = this.bookings.filter(booking => booking.bookingStatusID !== 3).length;
+      
       this.bookings.forEach((booking, index) => {
         if (booking.bookingStatusID !== 3) {
           const selectedStatus = this.selectedStatus[index];
@@ -178,6 +228,13 @@ export default {
           axios.post('http://localhost:3000/staffApprove', { bookId: bookingID, status: selectedStatus })
           .then(response => {
             console.log(`Status updated for bookingID ${bookingID}: ${response.data.message}`);
+            updateCount++;
+            
+            if (updateCount === totalUpdates) {
+              // เมื่ออัพเดททุกรายการเสร็จแล้ว
+              alert('All bookings have been updated successfully!');
+              this.closeBookingPopup();
+            }
           })
           .catch(error => {
             console.error(`Error updating status for bookingID ${bookingID}:`, error);
@@ -206,4 +263,107 @@ export default {
 
 <style scoped>
 @import '@/assets/css/SuperStaffHome.css';
+@import '@/assets/css/Calendar.css';
+
+/* เพิ่มการปรับแต่งสำหรับแก้ปัญหาปฏิทินถูกแถบบังส่วนบนล่าง */
+.content-wrapper {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.content h1, .content h4 {
+  padding-left: 0;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.calendar-container {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  margin: 20px 0;
+  padding-bottom: 50px; /* เพิ่มพื้นที่ด้านล่าง */
+}
+
+/* แก้ไข CSS ปฏิทินให้แสดงผลเต็มพื้นที่ที่มี */
+:deep(.calendar-container) {
+  max-height: none;
+  overflow: visible;
+}
+
+:deep(.calendar-grid) {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+/* สไตล์สำหรับ popup การจัดการการจอง */
+.booking-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* พื้นหลังสีเข้มโปร่งใส */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.booking-popup-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.booking-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 15px 20px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.booking-popup-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.close-btn {
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+.booking-popup-body {
+  padding: 20px;
+}
+
+.no-bookings {
+  text-align: center;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+/* ปรับแต่งสไตล์ slot ให้เหมาะกับ popup */
+.slot {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
 </style>

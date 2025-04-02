@@ -16,14 +16,24 @@
       <div class="content">
         <br><br><br>
         <h1>Book the Archery</h1><br>
-        <h2>Please select date first. Then select an available lane</h2><br><br>
-        <form @submit.prevent="submitForm">
-          <p Align="center">
-            <input class="datepicker" type="date" v-model="selectedDate" :min="minDate" :max="maxDate">
-            <button class="select" type="submit">Select</button>
-            <center><h4>*Please book in a current day or 1 day in advance</h4></center><br>
-          </p>
-        </form>
+        <h2>Please select an available lane</h2><br>
+        <div v-if="selectedDate">
+          <h2>Booking for: {{ selectedDate }}</h2>
+          <!-- <p Align="center">
+            <button class="select" @click="selectedDate = ''; status = false;">Change Date</button>
+          </p> -->
+        </div>
+        
+        <!-- <div v-else>
+          <h2>Please select date first. Then select an available lane</h2><br><br>
+          <form @submit.prevent="submitForm">
+            <p Align="center">
+              <input class="datepicker" type="date" v-model="selectedDate" :min="minDate" :max="maxDate">
+              <button class="select" type="submit">Select</button>
+              <center><h4>*Please book in a current day or 1 day in advance</h4></center><br>
+            </p>
+          </form>
+        </div> -->
         <br>
         <center><img src="status.jpg" width=35% height=10%></center>
         <br><br>
@@ -199,6 +209,17 @@ export default {
 
     // Set the maximum date to tomorrow
     this.maxDate = tomorrow.toISOString().split('T')[0];
+
+    const dateParam = this.$route.params.date;
+    if (dateParam) {
+      // กำหนดค่าวันที่ที่เลือกตามพารามิเตอร์
+      this.selectedDate = dateParam;
+      
+      // เรียกใช้ฟังก์ชัน submitForm เพื่อแสดงเลนส์ที่ว่างโดยอัตโนมัติ
+      this.$nextTick(() => {
+        this.submitForm();
+      })
+    }
   },
   computed: {
     namebarStyle() {

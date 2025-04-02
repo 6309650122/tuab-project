@@ -44,12 +44,13 @@
       :key="index"
       :class="[
         'calendar-day',
-        { 'special-bookable-day': day.isSpecialBookableDay },
         { 'outside-month': day.isOutsideMonth },
         { 'closed-day': day.isClosed },
+        { 'special-bookable-day': day.isSpecialBookableDay },
         { 'holiday-day': day.isHoliday },
         { 'special-day': day.isSpecialDay && !day.isHoliday && !day.isClosed && !day.isSpecialBookableDay },
         { 'open-day': !day.isOutsideMonth && !day.isClosed && !day.isHoliday && !day.isSpecialDay },
+        { 'past-date': day.isPastDate }
       ]"
       @click="handleDateClick(day)"
       :title="day.isHoliday ? day.holidayName : day.isSpecialDay ? day.specialDayName : ''"
@@ -118,6 +119,12 @@ import NotToken from '../components/NotToken.vue';
 
 export default {
 name: 'ArcheryBookingCalendar',
+props: {
+    mode: {
+      type: String,
+      default: 'general' // 'general' หรือ 'superstaff'
+    }
+  },
 data() {
   return {
     roleName: '',
@@ -170,6 +177,8 @@ computed: {
     
     const days = [];
     let day = new Date(startDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // รีเซ็ทเวลาให้เป็น 00:00:00 เพื่อเปรียบเทียบเฉพาะวันที่
     
     while (day <= endDate) {
       const isOutsideMonth = day.getMonth() !== this.currentDate.getMonth();
@@ -179,8 +188,11 @@ computed: {
       const holidayName = isHoliday ? this.getHolidayName(day) : '';
       const specialDayName = isSpecialDay ? this.getSpecialDayName(day) || this.getCustomSpecialDayName(day) : '';
 
+      // เพิ่มการตรวจสอบว่าเป็นวันที่ผ่านมาแล้วหรือไม่
+      const isPastDate = day < today;
+
       // คำนวณ isSpecialBookableDay ให้ถูกต้อง
-      const isSpecialBookableDay = isSpecialDay && !isHoliday && !isClosed && !isOutsideMonth;
+      const isSpecialBookableDay = isSpecialDay && !isHoliday && !isClosed && !isOutsideMonth && !isPastDate;
         
       days.push({
         date: new Date(day),
@@ -190,7 +202,8 @@ computed: {
         isSpecialDay,
         isSpecialBookableDay,
         holidayName,
-        specialDayName
+        specialDayName,
+        isPastDate 
       });
       
       day.setDate(day.getDate() + 1);
@@ -324,17 +337,25 @@ methods: {
   },
 
   handleDateClick(day) {
-    if ((!day.isOutsideMonth && !day.isClosed && !day.isHoliday) || day.isSpecialBookableDay) {
+    if ((!day.isOutsideMonth && !day.isClosed && !day.isHoliday && !day.isPastDate) || 
+        (day.isSpecialBookableDay && !day.isPastDate)) {
       this.selectedDate = day.date;
       // นำทางไปยังหน้าจอง
       const formattedDate = this.formatDateParam(day.date);
-      console.log(`นำทางไปยังหน้าจองสำหรับวันที่ ${formattedDate}`);
+      console.log(`วันที่ที่เลือก: ${formattedDate}, โหมด: ${this.mode}`);
       
       // ใช้ Vue Router เพื่อนำทางไปยังหน้าจอง
-      this.$router.push({
-        name: 'booking',
-        params: { date: formattedDate }
-      });
+      // ตรวจสอบโหมดการทำงาน
+      if (this.mode === 'superstaff') {
+          // โหมด superstaff - ส่ง event เพื่อดูการจองในวันนั้น
+          this.$emit('date-selected', formattedDate);
+        } else {
+          // โหมดทั่วไป - นำทางไปยังหน้าจอง
+          this.$router.push({
+            name: 'booking',
+            params: { date: formattedDate }
+        });
+      }
     }
   },
 
