@@ -13,25 +13,25 @@ router.get('/', jsonParser, function(req, res, next) {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
-  
-    // เพิ่มการดึงข้อมูล cancelTime
+    
+    // เพิ่มการดึงข้อมูล confirmTime
     connection.execute(
-      "SELECT bookingDate, targetLaneID, shiftID, bookingStatusID, bookingID, cancelTime FROM Booking WHERE username = ? ORDER BY bookingDate DESC, targetLaneID ASC",
+      "SELECT bookingDate, targetLaneID, shiftID, bookingStatusID, bookingID, cancelTime, confirmTime FROM Booking WHERE username = ? ORDER BY bookingDate DESC, targetLaneID ASC",
       [username],
       (err, rows) => {
         if (err) {
           console.error('Error executing SELECT query:', err);
           return res.status(500).json({ error: 'Database error' });
         }
-  
+        
         const filteredRows = rows.filter(row => {
           const bookingDate = new Date(row.bookingDate);
           const rowMonth = bookingDate.getMonth() + 1;
           const rowYear = bookingDate.getFullYear();
-  
+          
           return rowMonth === currentMonth && rowYear === currentYear;
         });
-  
+        
         const formattedRows = filteredRows.map(row => {
             const dateObject = new Date(row.bookingDate);
             const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
@@ -39,14 +39,14 @@ router.get('/', jsonParser, function(req, res, next) {
             .split('/')
             .reverse()
             .join('-');
-  
+            
             let lane;
             if (row.targetLaneID >= 101 && row.targetLaneID <= 106) {
                 lane = row.targetLaneID - 100;
             } else {
                 lane = row.targetLaneID; // ให้ใช้ค่าดั้งเดิมถ้าไม่อยู่ในช่วง 101-106
             }
-    
+            
             let shift;
             if (row.shiftID === '1') {
                 shift = '17:00';
@@ -61,53 +61,60 @@ router.get('/', jsonParser, function(req, res, next) {
             if (row.cancelTime) {
                 formattedCancelTime = formatDateTime(row.cancelTime);
             }
-    
+            
+            // จัดรูปแบบเวลาที่ยืนยัน
+            let formattedConfirmTime = null;
+            if (row.confirmTime) {
+                formattedConfirmTime = formatDateTime(row.confirmTime);
+            }
+            
             return {
                 bookingDate: formattedDate,
                 targetLaneID: lane,
                 shiftID: shift,
                 bookingStatusID: row.bookingStatusID,
                 bookingID: row.bookingID,
-                cancelTime: formattedCancelTime
+                cancelTime: formattedCancelTime,
+                confirmTime: formattedConfirmTime
             };
         });
-  
+        
         res.json(formattedRows);
       }
     );
-  });
+});
+
+// ฟังก์ชันจัดรูปแบบวันที่และเวลาเป็นเวลาไทย
+// ฟังก์ชันจัดรูปแบบวันที่และเวลาเป็นเวลาไทย
+function formatDateTime(dateTimeString) {
+  const dateTime = new Date(dateTimeString);
   
-  // ฟังก์ชันจัดรูปแบบวันที่และเวลาเป็นเวลาไทย
-  function formatDateTime(dateTimeString) {
-    const dateTime = new Date(dateTimeString);
-    
-    // เพิ่มเวลา 7 ชั่วโมงเพื่อให้เป็นเวลาไทย
-    // (ถ้าใน MySQL ไม่ได้เก็บเป็น UTC ให้ปรับตามความเหมาะสม)
-    dateTime.setHours(dateTime.getHours());
-    
-    const options = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'Asia/Bangkok'
-    };
+  // เพิ่มเวลา 7 ชั่วโมงเพื่อให้เป็นเวลาไทย
+  dateTime.setHours(dateTime.getHours() + 7);
   
-    // ใช้ toLocaleString เพื่อจัดรูปแบบวันที่และเวลา
-    const formattedDateTime = dateTime.toLocaleString('en-US', options);
-    
-    // แปลงรูปแบบจาก MM/DD/YYYY, HH:MM เป็น DD/MM/YYYY HH:MM
-    const parts = formattedDateTime.split(', ');
-    if (parts.length === 2) {
-      const dateParts = parts[0].split('/');
-      if (dateParts.length === 3) {
-        return `${dateParts[1]}/${dateParts[0]}/${dateParts[2]} ${parts[1]}`;
-      }
+  const options = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'UTC'  // ใช้ UTC เพราะเราได้ปรับเวลาด้วย +7 ชั่วโมงแล้ว
+  };
+  
+  // ใช้ toLocaleString เพื่อจัดรูปแบบวันที่และเวลา
+  const formattedDateTime = dateTime.toLocaleString('en-US', options);
+  
+  // แปลงรูปแบบจาก MM/DD/YYYY, HH:MM เป็น DD/MM/YYYY HH:MM
+  const parts = formattedDateTime.split(', ');
+  if (parts.length === 2) {
+    const dateParts = parts[0].split('/');
+    if (dateParts.length === 3) {
+      return `${dateParts[1]}/${dateParts[0]}/${dateParts[2]} ${parts[1]}`;
     }
-    
-    return formattedDateTime;
   }
   
+  return formattedDateTime;
+}
+
 module.exports = router;

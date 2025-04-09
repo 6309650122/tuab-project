@@ -210,7 +210,7 @@ export default {
       });
     },
     updateStatus() {
-      // ตรวจสอบว่ามีการจองที่ใช้งานอยู่ (ไม่ได้ยกเลิก) ใดๆ ที่ขาดสถานะหรือไม่
+  // ตรวจสอบว่ามีการจองที่ใช้งานอยู่ (ไม่ได้ยกเลิก) ใดๆ ที่ขาดสถานะหรือไม่
       const activeBookings = this.bookings.filter(booking => booking.bookingStatusID !== 3);
       const activeIndices = activeBookings.map(booking => 
         this.bookings.findIndex(b => b.bookingID === booking.bookingID)
@@ -234,7 +234,26 @@ export default {
         const selectedStatus = this.selectedStatus[index];
         const { bookingID } = booking;
         
-        axios.post('http://localhost:3000/staffApprove', { bookId: bookingID, status: selectedStatus })
+        // เตรียมข้อมูลที่จะส่งไปยัง API
+        const updateData = { 
+          bookId: bookingID, 
+          status: selectedStatus
+        };
+        
+        // กรณียกเลิกการจอง (status = 3) ให้บันทึกเวลายกเลิก
+        if (selectedStatus === 3) {
+          // ใช้เวลาปัจจุบันเป็นเวลายกเลิก
+          const now = new Date();
+          updateData.cancelTime = now.toISOString().slice(0, 19).replace('T', ' '); // Format: YYYY-MM-DD HH:MM:SS
+        }
+        
+        // กรณียืนยันการจอง (status = 2) ให้บันทึกเวลายืนยัน
+        if (selectedStatus === 2) {
+          const now = new Date();
+          updateData.confirmTime = now.toISOString().slice(0, 19).replace('T', ' '); // Format: YYYY-MM-DD HH:MM:SS
+        }
+        
+        axios.post('http://localhost:3000/staffApprove', updateData)
         .then(response => {
           console.log(`อัพเดตสถานะสำหรับการจอง ID ${bookingID}: ${response.data.message}`);
           updateCount++;

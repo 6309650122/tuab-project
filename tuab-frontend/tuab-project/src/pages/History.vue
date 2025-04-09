@@ -27,10 +27,20 @@
           <h2>{{ formatDate(booking.bookingDate) }}</h2>
           <s1>Lane {{ booking.targetLaneID }}</s1>
           <s1>{{ booking.shiftID }}</s1>
+
+           <!-- แสดงสถานะ Pending -->
+          <s1 v-if="booking.bookingStatusID === 1" class="time-info pending-time">
+            Pending
+          </s1>
           
-          <!-- แสดงเวลาที่ยกเลิกถ้าสถานะเป็น "ยกเลิก" -->
-          <s1 v-if="booking.bookingStatusID === 3 && booking.cancelTime" class="cancel-time">
-            ยกเลิกเมื่อ: {{ booking.cancelTime }}
+          <!-- แสดงเวลาที่ยกเลิกการจอง -->
+          <s1 v-if="booking.bookingStatusID === 3 && booking.cancelTime" class="time-info cancel-time">
+            Canceled: {{ formatCancelTime(booking.cancelTime) }}
+          </s1>
+
+          <!-- แสดงเวลาที่ยืนยันการจอง -->
+          <s1 v-if="booking.bookingStatusID === 2 && booking.confirmTime" class="time-info confirm-time">
+            Comfirmed: {{ formatConfirmTime(booking.confirmTime) }}
           </s1>
           
           <button class="addbtn" 
@@ -59,12 +69,17 @@ export default {
     return {
       roleName: '',
       name: '',
+      username: '',
+      roles: '',
       bookings: []
     };
   },
   mixins: [NotToken],
   mounted() {
     this.username = localStorage.getItem("username");
+    this.name = localStorage.getItem("name") || '';
+    this.roleName = localStorage.getItem("roleName") || '';
+    this.roles = localStorage.getItem("roles") || '';
     this.fetchBookings();
     
     // Log ข้อมูลดิบเพื่อตรวจสอบ
@@ -85,6 +100,62 @@ export default {
     }
   },
   methods: {
+    // แสดงข้อความสถานะ
+    getStatusText(statusID) {
+      switch (parseInt(statusID)) {
+        case 1: return 'รอการยืนยัน';
+        case 2: return 'ยืนยันแล้ว';
+        case 3: return 'ยกเลิกแล้ว';
+        default: return 'ไม่ทราบสถานะ';
+      }
+    },
+    
+    formatCancelTime(timeString) {
+  if (!timeString) return '';
+  
+  try {
+    const date = new Date(timeString);
+    if (isNaN(date.getTime())) return timeString;
+    
+    // จัดรูปแบบ: วัน/เดือน/ปี ชั่วโมง:นาที
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  } catch (error) {
+    console.error('Error formatting cancel time:', error);
+    return timeString;
+  }
+},
+
+// ฟังก์ชันสำหรับแสดงเวลาที่ยืนยัน (บวก 7 ชม.)
+formatConfirmTime(timeString) {
+  if (!timeString) return '';
+  
+  try {
+    const date = new Date(timeString);
+    if (isNaN(date.getTime())) return timeString;
+    
+    // บวกเวลาเพิ่ม 7 ชั่วโมงสำหรับ timezone ไทย (UTC+7)
+    const thaiDate = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+    
+    // จัดรูปแบบ: วัน/เดือน/ปี ชั่วโมง:นาที
+    const day = thaiDate.getDate().toString().padStart(2, '0');
+    const month = (thaiDate.getMonth() + 1).toString().padStart(2, '0');
+    const year = thaiDate.getFullYear();
+    const hours = thaiDate.getHours().toString().padStart(2, '0');
+    const minutes = thaiDate.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  } catch (error) {
+    console.error('Error formatting confirm time:', error);
+    return timeString;
+  }
+},
+    
     // ฟังก์ชันจัดรูปแบบวันที่
     formatDate(dateString) {
       if (!dateString) return '';
@@ -140,6 +211,7 @@ export default {
           return a.targetLaneID - b.targetLaneID;
         });
         
+        console.log('Parsed bookings data:', bookings);
         this.bookings = bookings;
       })
       .catch(error => {
@@ -204,16 +276,45 @@ export default {
 <style scoped>
 @import '@/assets/css/History.css';
 
-/* เพิ่ม CSS สำหรับแสดงเวลาที่ยกเลิก */
-.cancel-time {
-  color: #ff5252;
-  font-size: 0.85em;
-  display: block;
-  margin-top: 5px;
-  background-color: rgba(255, 82, 82, 0.1);
-  padding: 3px 6px;
+/* สไตล์สำหรับแสดงข้อความสถานะการจอง */
+.booking-status {
+  padding: 3px 8px;
   border-radius: 4px;
-  border-left: 3px solid #ff5252;
-  width: fit-content;
+  font-weight: bold;
+  margin-top: 5px;
+  display: inline-block;
+}
+/* สไตล์สำหรับแสดงเวลาที่ยกเลิกและยืนยัน */
+.time-info {
+  font-size: 0.85em;
+  display: inline-block; /* เปลี่ยนจาก block เป็น inline-block เพื่อให้กำหนดความกว้างได้ */
+  margin-top: 5px;
+  border-radius: 4px;
+  min-width: 120px; /* กำหนดความกว้างขั้นต่ำให้เท่ากัน */
+  text-align: center; /* จัดให้ข้อความอยู่ตรงกลาง */
+  height: 40px; /* กำหนดความสูงให้เท่ากัน */
+  line-height: 18px; /* จัดให้ข้อความอยู่กึ่งกลางแนวตั้ง */
+  overflow: hidden; /* ซ่อนข้อความที่เกินขอบ */
+  text-overflow: ellipsis; /* แสดง ... เมื่อข้อความยาวเกินไป */
+  box-sizing: border-box; /* ให้การคำนวณขนาดรวม padding และ border */
+}
+
+
+.cancel-time {
+  color: #721c24;
+  background-color: rgba(248, 215, 218, 0.2);
+  border-left: 3px solid #f5c6cb;
+}
+
+.confirm-time {
+  color: #155724;
+  background-color: rgba(212, 237, 218, 0.2);
+  border-left: 3px solid #c3e6cb;
+}
+
+.pending-time {
+  color: #856404;
+  background-color: rgba(255, 243, 205, 0.2);
+  border-left: 3px solid #ffeeba;
 }
 </style>
