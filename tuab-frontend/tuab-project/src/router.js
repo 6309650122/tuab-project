@@ -17,6 +17,8 @@ import UserCalendar from './pages/UserCalendar.vue'
 import BaseCalendar from './pages/BaseCalendar.vue'
 import StaffShiftCalendar from './pages/StaffShiftCalendar.vue'
 import StaffCalendar from './pages/StaffCalendar.vue'
+import OperationCalendar from './pages/OperationCalendar.vue'
+
 
 Vue.use(Router)
 
@@ -107,6 +109,11 @@ export default new Router({
         path: '/staff-calendar',
         name: 'StaffCalendar',
         component: StaffCalendar
+    },
+    {
+        path: '/Operation-calendar',
+        name: 'OperationCalendar',
+        component: OperationCalendar
     }
     ]
 })

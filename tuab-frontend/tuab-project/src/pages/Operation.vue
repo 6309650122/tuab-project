@@ -13,52 +13,11 @@
       </div>
 
       <div class="content">
-        <br><br><br>
-        <h1>Edit Settings</h1><br>
-        <h2>Please select start and end date to set an opening day</h2><br>
+        <br>
+        <h1>Edit Settings</h1>
+        <h2>Please select start and end date to set an opening day</h2><br><br>
 
-        <form @submit.prevent="submitForm" >
-          <!-- Start Date -->
-          <label>Start Date</label><br>
-          <center>
-          <input class="datepicker" 
-                type="date" 
-                v-model="startDate" 
-                :min="minDate" 
-                :disabled="isDateDisabled(startDate)"   
-          required>
-          </center>
-          <br><br>
-
-          <!-- End Date -->
-          <label>End Date</label><br>
-          <center>
-          <input class="datepicker" 
-                type="date" 
-                v-model="endDate" 
-                :min="nextDayStartDate" 
-                :disabled="isDateDisabled(endDate)"  
-          required>
-          <center><button class="submit" @click="submitForm">SAVE</button></center>
-          </center>
-        </form>
-      </div>
-
-      <div class="content">
-        <h4>Current Super Staff : {{username}} {{name}}</h4> 
-      </div>
-
-      <!-- CompletePopUP  -->
-      <div class="popup" id="completePopup">
-        <img src="paychecked.png" width=30% height=30%><br>
-        <h7>The operation has been saved</h7><br>
-        <button type="submit" @click="closePopup">DONE</button>
-      </div> 
-      <!-- CompletePopUP For Alert -->
-      <div class="popup" id="completePopupForAlert">
-        <img src="warning.png" width=30% height=30%><br>
-        <h7>Please select the different between start date and end date</h7><br>
-        <button type="submit" @click="closePopupForAlert">CLOSE</button>
+        <OperationCalendar/>
       </div> 
     </body>
   </div>
@@ -67,7 +26,12 @@
 <script>
 import NotToken from '../components/NotToken.vue';
 import axios from 'axios';
+import OperationCalendar from './OperationCalendar.vue';
+
 export default {
+  components:{
+    OperationCalendar
+  },
   data() {
     return {
       isSubmitting: false,
@@ -210,8 +174,5 @@ export default {
 
 <style scoped>
 @import '@/assets/css/Operation.css';
-.disabled {
-  color: #ccc; /* ทำให้ตัวอักษรจางลง */
-  background-color: #eee; /* ทำให้พื้นหลังเป็นสีเทา */
-}
+@import '@/assets/css/Calendar.css';
 </style>
