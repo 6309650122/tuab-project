@@ -15,50 +15,12 @@
       </div>
 
       <div class="content">
-        <br><br><br>
+        <br>
         <h1>Manage Timesheet</h1><br>
         <h2>Please select date first. Then, check/uncheck desired time shifts</h2><br><br>
-      
-        <!-- Date select -->
-        <form align="center">
-          <input class="datepicker" type="date" v-model="selectedDate" :min="minDate" :max="maxDate">
-        </form>
-        <br><br>
 
-        <!-- Shift select -->
-        <div class="shiftbox" align="center">
-          <input class="box" type="checkbox" id="shift1" name="shift1" value="1" v-model="selectedShifts">
-          <label for="shift1">17.00 - 17.30</label><br>
-          <input class="box" type="checkbox" id="shift2" name="shift2" value="2" v-model="selectedShifts">
-          <label for="shift2">17.30 - 18.00</label><br>
-        </div>
-
-        <!-- SAVE button -->
-        <center><button class="submit" @click="saveSchedule">SAVE</button></center>
-      </div>
-
-      <!-- Accepted PopUP -->
-      <div class="popup" id="acceptpopup">
-        <img src="paychecked.png" width="30%" height="30%"><br>
-        <h7>Shift Operation saved!</h7><br>
-        <button @click="closePopup">HOME</button>
-      </div>
-
-      <!-- Date Warning PopUP -->
-      <div class="popup" id="datewarnpopup">
-        <img src="warning.png" width="30%" height="30%"><br>
-        <h7>Please specify working date before click "SAVE"</h7><br>
-        <button @click="closeDPopup">BACK</button>
-      </div>
-
-      <!-- Empty Shift PopUP -->
-      <div class="popup" id="emptypopup">
-        <a @click="closeEPopup">X</a>
-        <img src="warning.png" width=30% height=30%><br>
-        <h7>NO any shift was selected</h7><br>
-        <h8>Click "SUBMIT" to save your shift as No-working day</h8><br>
-        <button type="submit" @click="closePopup">SUBMIT</button>
-      </div> 
+        <StaffShiftCalendar/>  
+      </div>   
     </body>
   </div>
 </template>
@@ -66,7 +28,12 @@
 <script>
 import axios from 'axios';
 import NotToken from '../components/NotToken.vue';
+import StaffShiftCalendar from './StaffShiftCalendar.vue';
 export default {
+  components:{
+    StaffShiftCalendar
+  },
+
   data() {
     return {
       roleName: '',

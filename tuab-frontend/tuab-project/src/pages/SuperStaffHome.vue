@@ -12,7 +12,7 @@
         <p Align=center><button class="menu" @click="booking"><span> BOOK NOW </span></button></p><br>
         <p Align=center><button class="menu" @click="cancel"><span> CANCEL BOOKING </span></button></p><br>
         <p Align=center><button class="menu" @click="history"><span> BOOKING HISTORY </span></button></p><br>
-        <p Align=center><button class="menu" @click="StaffTimesheet"><span> STAFF TIMESHEET </span></button></p><br>
+        <p Align=center><button class="menu" @click="StaffTimesheet"><span><img src="setting.png" width=9%> Staff Timesheet </span></button></p><br>
         <p Align=center><button class="staffmenu" @click="shiftSchedule"><span><img src="setting.png" width=9%> Manage Timesheet </span></button></p><br>
         <p Align=center><button class="staffmenu" @click="operation"><span><img src="setting.png" width=9%> Edit Settings </span></button></p><br>
 
@@ -27,7 +27,7 @@
 
           <!-- ใช้ FullCalendar ด้วยโหมด superstaff -->
           <div class="calendar-container">
-            <FullCalendar mode="superstaff" @date-selected="handleCalendarDateSelect" />
+            <StaffCalendar mode="superstaff" @date-selected="handleCalendarDateSelect" />
           </div>
         </div>
       </div>
@@ -85,12 +85,12 @@
 import axios from 'axios';
 import NotToken from '../components/NotToken.vue';
 import LogoutBotton from '../components/LogoutBotton.vue';
-import FullCalendar from './FullCalendar.vue';
+import StaffCalendar from './StaffCalendar.vue';
 
 export default {
   components:{
     LogoutBotton,
-    FullCalendar
+    StaffCalendar
   },
   data() {
     return {
@@ -182,12 +182,9 @@ export default {
       axios.get('http://localhost:3000/checkBookStaff', { params: { date: this.selectedDate } })
       .then(response => {
         this.bookings = response.data;
-        this.selectedStatus = new Array(this.bookings.length).fill(null);
-        this.bookings.forEach((booking, index) => {
-          if (booking.bookingStatusID === 2) {
-            this.selectedStatus[index] = 2;
-          }
-        });
+        
+        // กำหนดค่าเริ่มต้นอาร์เรย์ selectedStatus ด้วยสถานะการจองปัจจุบัน
+        this.selectedStatus = this.bookings.map(booking => booking.bookingStatusID);
         
         // แสดง popup หลังจากดึงข้อมูลเสร็จ
         this.showBookingPopup = true;
@@ -213,33 +210,44 @@ export default {
       });
     },
     updateStatus() {
-      if (this.selectedStatus.some(status => status === null)) {
-        alert('Please select a status for each booking');
+      // ตรวจสอบว่ามีการจองที่ใช้งานอยู่ (ไม่ได้ยกเลิก) ใดๆ ที่ขาดสถานะหรือไม่
+      const activeBookings = this.bookings.filter(booking => booking.bookingStatusID !== 3);
+      const activeIndices = activeBookings.map(booking => 
+        this.bookings.findIndex(b => b.bookingID === booking.bookingID)
+      );
+      
+      const hasNullStatus = activeIndices.some(index => 
+        this.selectedStatus[index] === null || this.selectedStatus[index] === undefined
+      );
+      
+      if (hasNullStatus) {
+        alert('กรุณาเลือกสถานะสำหรับการจองที่ใช้งานอยู่ทั้งหมด');
         return;
       }
       
       let updateCount = 0;
-      const totalUpdates = this.bookings.filter(booking => booking.bookingStatusID !== 3).length;
+      const totalUpdates = activeBookings.length;
       
-      this.bookings.forEach((booking, index) => {
-        if (booking.bookingStatusID !== 3) {
-          const selectedStatus = this.selectedStatus[index];
-          const { bookingID } = booking;
-          axios.post('http://localhost:3000/staffApprove', { bookId: bookingID, status: selectedStatus })
-          .then(response => {
-            console.log(`Status updated for bookingID ${bookingID}: ${response.data.message}`);
-            updateCount++;
-            
-            if (updateCount === totalUpdates) {
-              // เมื่ออัพเดททุกรายการเสร็จแล้ว
-              alert('All bookings have been updated successfully!');
-              this.closeBookingPopup();
-            }
-          })
-          .catch(error => {
-            console.error(`Error updating status for bookingID ${bookingID}:`, error);
-          });
-        }
+      // อัพเดตเฉพาะการจองที่ใช้งานอยู่
+      activeBookings.forEach(booking => {
+        const index = this.bookings.findIndex(b => b.bookingID === booking.bookingID);
+        const selectedStatus = this.selectedStatus[index];
+        const { bookingID } = booking;
+        
+        axios.post('http://localhost:3000/staffApprove', { bookId: bookingID, status: selectedStatus })
+        .then(response => {
+          console.log(`อัพเดตสถานะสำหรับการจอง ID ${bookingID}: ${response.data.message}`);
+          updateCount++;
+          
+          if (updateCount === totalUpdates) {
+            // เมื่ออัพเดททุกรายการเสร็จแล้ว
+            alert('อัพเดตทุกการจองเรียบร้อยแล้ว!');
+            this.closeBookingPopup();
+          }
+        })
+        .catch(error => {
+          console.error(`เกิดข้อผิดพลาดในการอัพเดตสถานะสำหรับการจอง ID ${bookingID}:`, error);
+        });
       });
     }
   },

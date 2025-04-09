@@ -16,9 +16,6 @@
       <div class="content">
         <br><br><br>
         <h1>Cancel Booking</h1><br><br>
-        <!-- <div class="slot">
-          <h2>DD/MM/YYYY</h2><s1>Lane 1</s1><s1>17.00</s1><button class="cancelbtn" @click="openPopup"> CANCEL </button><br>
-        </div> -->
         <div v-for="(booking, index) in bookings" :key="index" class="slot">
           <h2>{{ booking.bookingDate }}</h2>
           <s1>Lane {{ booking.targetLaneID }}</s1>
@@ -31,8 +28,8 @@
       <div class="popup" id="popup">
         <a class="close" @click="closePopup">X</a>
         <img src="warning.png" width=40% height=40%><br>
-        <h7>Cancel your booking?</h7><br>
-        <h8>Please click SUBMIT below, to cancelling your booking</h8><br>
+        <h5>Cancel your booking?</h5><br>
+        <h6>Please click SUBMIT below, to cancelling your booking</h6><br>
         <button type="submit" @click="submitCancellation"> SUBMIT </button>
       </div> 
     </body>
@@ -47,13 +44,16 @@ export default {
     return {
       roleName: '',
       name: '',
+      username: '',
+      roles: '',
       bookings: [],
+      bookingToCancel: null
     };
   },
   methods: {
     fetchBookings() {
       const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+      const futureDate = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
 
       axios.get('http://localhost:3000/bookingHistory', {
         params: {
@@ -61,63 +61,136 @@ export default {
         }
       })
       .then(response => {
+        console.log('Retrieved bookings:', response.data);
         const filteredBookings = response.data.filter(booking => {
-          const bookingDate = new Date(booking.bookingDate);
-          const bookingStatusID = booking.bookingStatusID;
+          // แปลงวันที่จาก YYYY-MM-DD เป็น Date object
+          const parts = booking.bookingDate.split('-');
+          const bookingDate = new Date(
+            parseInt(parts[0]),  // ปี
+            parseInt(parts[1]) - 1,  // เดือน (0-11)
+            parseInt(parts[2])   // วัน
+          );
+          
+          const bookingStatusID = parseInt(booking.bookingStatusID);
+          console.log(`Booking ID: ${booking.bookingID}, Status: ${bookingStatusID}, Date: ${bookingDate}, Shift: ${booking.shiftID}`);
+          
           const isNotCancelledOrRejected = bookingStatusID !== 3;
-          const isWithinDateRange = bookingDate >= new Date(today) && bookingDate <= new Date(tomorrow);
+          const isWithinDateRange = bookingDate >= new Date(today) && bookingDate <= new Date(futureDate);
 
           return isNotCancelledOrRejected && isWithinDateRange;
         });
+        
+        console.log('Filtered bookings:', filteredBookings);
         this.bookings = filteredBookings;
       })
       .catch(error => {
         console.error('Error fetching bookings:', error);
       });
     },
-    cancelBooking(booking) {
-      this.openPopup();
-      if (this.submitCancellation) {
-        this.date = booking.bookingDate,
-        this.status = 3
-        localStorage.setItem("date", this.date)
-        localStorage.setItem("status", this.status)
+    
+    // แปลงวันที่จาก YYYY-MM-DD เป็น YYYY-MM-DD
+    formatDateForMySQL(dateString) {
+      try {
+        // ถ้าเป็นรูปแบบ YYYY-MM-DD ที่ถูกต้องแล้ว
+        const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+        if (datePattern.test(dateString)) {
+          return dateString;
+        }
+        
+        // ถ้าเป็นรูปแบบ DD-MM-YYYY
+        if (dateString.includes('-')) {
+          const parts = dateString.split('-');
+          if (parts.length === 3) {
+            // ตรวจสอบว่าปีมี 4 หลัก
+            if (parts[0].length === 4) {
+              // เป็นรูปแบบ YYYY-MM-DD อยู่แล้ว
+              return dateString;
+            } else if (parts[2].length === 4) {
+              // เป็นรูปแบบ DD-MM-YYYY
+              return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+          }
+        }
+        
+        // หากไม่ตรงกับรูปแบบที่รองรับ ให้ลองแปลงเป็น Date object
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0];
+        }
+        
+        console.error('Invalid date format:', dateString);
+        return dateString;
+      } catch (error) {
+        console.error('Error formatting date:', error);
+        return dateString;
       }
     },
+    
+    cancelBooking(booking) {
+      this.bookingToCancel = booking;
+      console.log('Selected booking for cancellation:', booking);
+      this.openPopup();
+    },
+    
     submitCancellation() {
-      this.date = localStorage.getItem("date");
-      this.status = localStorage.getItem("status");
+      if (!this.bookingToCancel) {
+        console.error('No booking selected for cancellation');
+        this.closePopup();
+        return;
+      }
+
+      console.log('Cancelling booking:', this.bookingToCancel);
+      
+      // แปลงรูปแบบวันที่ให้ถูกต้อง
+      const formattedDate = this.formatDateForMySQL(this.bookingToCancel.bookingDate);
+      console.log('Original date:', this.bookingToCancel.bookingDate);
+      console.log('Formatted date for API:', formattedDate);
+      
+      // แปลง targetLaneID กลับเป็นรูปแบบที่เก็บในฐานข้อมูล (ถ้าใน DB เก็บเป็น 101-106)
+      const originalLaneID = parseInt(this.bookingToCancel.targetLaneID) + 100;
+      
+      // ส่ง shiftID ไปด้วยเพื่อให้ยกเลิกเฉพาะช่วงเวลาที่เลือก
       axios.post('http://localhost:3000/cancelBooking', {
-        date: this.date,
-        status: this.status,
-        username: this.username
+        date: formattedDate,
+        status: 3, // สถานะยกเลิก
+        username: this.username,
+        targetLaneID: originalLaneID,
+        shiftID: this.bookingToCancel.shiftID // เพิ่ม shiftID
       })
       .then(response => {
         console.log('Booking canceled successfully:', response.data);
+        
+        // ลบรายการที่ถูกยกเลิกออกจาก bookings array โดยตรวจสอบทั้ง lane และ shift
+        this.bookings = this.bookings.filter(booking => 
+          !(booking.bookingDate === this.bookingToCancel.bookingDate && 
+            booking.targetLaneID === this.bookingToCancel.targetLaneID &&
+            booking.shiftID === this.bookingToCancel.shiftID)
+        );
+        
+        alert('ยกเลิกการจองเรียบร้อยแล้ว');
+        
         this.closePopup();
-        localStorage.removeItem("date");
-        localStorage.removeItem("status");
+        this.bookingToCancel = null;
+        this.fetchBookings(); // ดึงข้อมูลใหม่อีกครั้ง
       })
       .catch(error => {
         console.error('Error canceling booking:', error);
-        this.fetchBookings();
+        alert('เกิดข้อผิดพลาดในการยกเลิกการจอง โปรดลองอีกครั้ง');
+        console.log('Error details:', error.response ? error.response.data : error.message);
+        this.closePopup();
+        this.bookingToCancel = null;
       });
     },
-    backhome () {
+    
+    backhome() {
       if(this.roles == '1'){
         this.$router.push('/general-home')
-        localStorage.removeItem("date");
-        localStorage.removeItem("status");
       }
       else if(this.roles == '2'){
         this.$router.push('/superStaff-home')
-        localStorage.removeItem("date");
-        localStorage.removeItem("status");
       }
       else if(this.roles == '3'){
         this.$router.push('/staff-home')
-        localStorage.removeItem("date");
-        localStorage.removeItem("status");
       }
     },    
     openPopup(){
@@ -125,6 +198,7 @@ export default {
     },
     closePopup(){
       popup.classList.remove('open-popup')
+      this.bookingToCancel = null;
     }
   },
   computed: {
@@ -139,6 +213,9 @@ export default {
   mixins: [NotToken],
   mounted() {
     this.username = localStorage.getItem("username");
+    this.name = localStorage.getItem("name") || '';
+    this.roleName = localStorage.getItem("roleName") || '';
+    this.roles = localStorage.getItem("roles") || '';
     this.fetchBookings();
   },
 }  

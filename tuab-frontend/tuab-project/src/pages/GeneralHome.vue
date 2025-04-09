@@ -17,7 +17,7 @@
         <br>
         <h1>Welcome to TU Archery Booking system</h1><br>
         <center>
-        <FullCalendar/>
+        <UserCalendar/>
         </center>
         <br><br><br>
         <br><br><br>
@@ -51,11 +51,11 @@
 <script>
 import LogoutBotton from '../components/LogoutBotton.vue';
 import NotToken from '../components/NotToken.vue';
-import FullCalendar from './FullCalendar.vue';
+import UserCalendar from './UserCalendar.vue';
 export default {
   components:{
     LogoutBotton,
-    FullCalendar
+    UserCalendar
   },
   data() {
     return {

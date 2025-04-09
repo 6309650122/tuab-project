@@ -14,8 +14,9 @@ router.get('/', jsonParser, function(req, res, next) {
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
   
+    // เพิ่มการดึงข้อมูล cancelTime
     connection.execute(
-      "SELECT bookingDate, targetLaneID, shiftID, bookingStatusID, bookingID FROM Booking WHERE username = ?",
+      "SELECT bookingDate, targetLaneID, shiftID, bookingStatusID, bookingID, cancelTime FROM Booking WHERE username = ? ORDER BY bookingDate DESC, targetLaneID ASC",
       [username],
       (err, rows) => {
         if (err) {
@@ -42,6 +43,8 @@ router.get('/', jsonParser, function(req, res, next) {
             let lane;
             if (row.targetLaneID >= 101 && row.targetLaneID <= 106) {
                 lane = row.targetLaneID - 100;
+            } else {
+                lane = row.targetLaneID; // ให้ใช้ค่าดั้งเดิมถ้าไม่อยู่ในช่วง 101-106
             }
     
             let shift;
@@ -49,6 +52,14 @@ router.get('/', jsonParser, function(req, res, next) {
                 shift = '17:00';
             } else if (row.shiftID === '2') {
                 shift = '17:30';
+            } else {
+                shift = row.shiftID; // ใช้ค่าเดิมถ้าไม่ตรงกับเงื่อนไข
+            }
+            
+            // จัดรูปแบบเวลาที่ยกเลิก
+            let formattedCancelTime = null;
+            if (row.cancelTime) {
+                formattedCancelTime = formatDateTime(row.cancelTime);
             }
     
             return {
@@ -56,7 +67,8 @@ router.get('/', jsonParser, function(req, res, next) {
                 targetLaneID: lane,
                 shiftID: shift,
                 bookingStatusID: row.bookingStatusID,
-                bookingID: row.bookingID
+                bookingID: row.bookingID,
+                cancelTime: formattedCancelTime
             };
         });
   
@@ -64,5 +76,38 @@ router.get('/', jsonParser, function(req, res, next) {
       }
     );
   });
+  
+  // ฟังก์ชันจัดรูปแบบวันที่และเวลาเป็นเวลาไทย
+  function formatDateTime(dateTimeString) {
+    const dateTime = new Date(dateTimeString);
+    
+    // เพิ่มเวลา 7 ชั่วโมงเพื่อให้เป็นเวลาไทย
+    // (ถ้าใน MySQL ไม่ได้เก็บเป็น UTC ให้ปรับตามความเหมาะสม)
+    dateTime.setHours(dateTime.getHours());
+    
+    const options = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Bangkok'
+    };
+  
+    // ใช้ toLocaleString เพื่อจัดรูปแบบวันที่และเวลา
+    const formattedDateTime = dateTime.toLocaleString('en-US', options);
+    
+    // แปลงรูปแบบจาก MM/DD/YYYY, HH:MM เป็น DD/MM/YYYY HH:MM
+    const parts = formattedDateTime.split(', ');
+    if (parts.length === 2) {
+      const dateParts = parts[0].split('/');
+      if (dateParts.length === 3) {
+        return `${dateParts[1]}/${dateParts[0]}/${dateParts[2]} ${parts[1]}`;
+      }
+    }
+    
+    return formattedDateTime;
+  }
   
 module.exports = router;

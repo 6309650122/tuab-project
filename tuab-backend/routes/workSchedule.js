@@ -11,7 +11,7 @@ var connection = require('../connection/db.js');
 router.post('/', jsonParser, function(req, res, next) {
     const { username, workDate, workShift } = req.body;
     const formattedDate = new Date(workDate).toISOString().split('T')[0];
-
+    
     connection.execute("INSERT INTO WorkSchedule (username, workingDate, workingShift) VALUES (?, ?, ?)",
         [username, workDate, workShift],
         (err, results) => {
@@ -21,6 +21,88 @@ router.post('/', jsonParser, function(req, res, next) {
             }
             res.json({ status: 'ok', message: 'WorkSchedule successful', workId: results.insertId });
         });
-  });
-  
-  module.exports = router;
+});
+
+// Update existing workSchedule
+router.put('/:id', jsonParser, function(req, res, next) {
+    const scheduleId = req.params.id;
+    const { username, workDate, workShift } = req.body;
+    
+    connection.execute(
+        "UPDATE WorkSchedule SET username = ?, workingDate = ?, workingShift = ? WHERE workID = ?",
+        [username, workDate, workShift, scheduleId],
+        (err, results) => {
+            if (err) {
+                console.error('Error updating workSchedule in database:', err);
+                return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+            }
+            
+            if (results.affectedRows === 0) {
+                return res.status(404).json({ status: 'error', message: 'WorkSchedule not found' });
+            }
+            
+            res.json({ status: 'ok', message: 'WorkSchedule updated successfully' });
+        }
+    );
+});
+
+// Delete workSchedule
+router.delete('/:id', jsonParser, function(req, res, next) {
+    const scheduleId = req.params.id;
+    
+    connection.execute(
+        "DELETE FROM WorkSchedule WHERE workID = ?",
+        [scheduleId],
+        (err, results) => {
+            if (err) {
+                console.error('Error deleting workSchedule from database:', err);
+                return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+            }
+            
+            if (results.affectedRows === 0) {
+                return res.status(404).json({ status: 'error', message: 'WorkSchedule not found' });
+            }
+            
+            res.json({ status: 'ok', message: 'WorkSchedule deleted successfully' });
+        }
+    );
+});
+
+// Get workSchedule by username
+router.get('/user/:username', function(req, res, next) {
+    const username = req.params.username;
+    
+    connection.execute(
+        "SELECT * FROM WorkSchedule WHERE username = ? ORDER BY workingDate",
+        [username],
+        (err, results) => {
+            if (err) {
+                console.error('Error fetching workSchedule from database:', err);
+                return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+            }
+            
+            res.json(results);
+        }
+    );
+});
+
+// Check work schedule for a specific date and username (existing endpoint in your code)
+// Assuming this is already implemented elsewhere, but adding here for completeness
+router.get('/checkWork', function(req, res, next) {
+    const { username, workDate } = req.query;
+    
+    connection.execute(
+        "SELECT * FROM WorkSchedule WHERE username = ? AND workingDate = ?",
+        [username, workDate],
+        (err, results) => {
+            if (err) {
+                console.error('Error checking workSchedule in database:', err);
+                return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+            }
+            
+            res.json(results);
+        }
+    );
+});
+
+module.exports = router;

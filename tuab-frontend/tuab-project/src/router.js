@@ -13,8 +13,10 @@ import Cancel from './pages/Cancel.vue'
 import Operation from './pages/Operation.vue'
 import ShiftSchedule from './pages/ShiftSchedule.vue'
 import StaffTimesheet from './pages/StaffTimesheet.vue'
-import FullCalendar from './pages/FullCalendar.vue'
+import UserCalendar from './pages/UserCalendar.vue'
 import BaseCalendar from './pages/BaseCalendar.vue'
+import StaffShiftCalendar from './pages/StaffShiftCalendar.vue'
+import StaffCalendar from './pages/StaffCalendar.vue'
 
 Vue.use(Router)
 
@@ -87,14 +89,24 @@ export default new Router({
         component: StaffTimesheet
     },
     {
-        path: '/full-calendar',
-        name: 'FullCalendar',
-        component: FullCalendar
+        path: '/user-calendar',
+        name: 'UserCalendar',
+        component: UserCalendar
     },
     {
         path: '/base-calendar',
         name: 'BaseCalendar',
         component: BaseCalendar
+    },
+    {
+        path: '/staffshift-calendar',
+        name: 'StaffShiftCalendar',
+        component: StaffShiftCalendar
+    },
+    {
+        path: '/staff-calendar',
+        name: 'StaffCalendar',
+        component: StaffCalendar
     }
     ]
 })
