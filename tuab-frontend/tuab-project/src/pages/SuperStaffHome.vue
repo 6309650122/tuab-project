@@ -24,7 +24,7 @@
         <div class="content-wrapper">
           <h1>Welcome to TU Archery Booking system</h1>
           <h4>You're in Super Staff mode. Please select a date on the calendar to view and manage bookings.</h4>
-
+          <br>
           <!-- ใช้ FullCalendar ด้วยโหมด superstaff -->
           <div class="calendar-container">
             <StaffCalendar mode="superstaff" @date-selected="handleCalendarDateSelect" />
@@ -48,20 +48,25 @@
               <!-- Bookings Slot -->
               <div v-for="(booking, index) in bookings" :key="index" class="slot">
                 <template v-if="booking.bookingStatusID !== 3">
-                  <h2>{{ booking.username }}</h2>
-                  <n>{{ booking.name }}</n>
-                  <t1>(Tel.{{booking.telNumber}})</t1>
-                  <h5>{{ booking.shiftID }}</h5>
-                  <h5>Lane {{ booking.targetLaneID }}</h5>
+                  <h2>Username: {{ booking.username }}</h2>
+                  <h2>Name: {{ booking.name }}</h2>
+                  <h2>Tel: {{booking.telNumber}}</h2>
+                  <h2>Shift: {{ booking.shiftID }}</h2>
+                  <h2>Lane: {{ booking.targetLaneID }}</h2>
                   <button class="slipbtn" @click="showSlip(booking)">Payment</button>
+                  <h2>Select Status</h2>
                   <select v-model="selectedStatus[index]" class="status-select" id="status">
                     <option v-if="!selectedStatus[index]" :value="null" disabled selected>Please select one:</option>
                     <option v-for="status in status" :key="status.id" :value="status.id">{{ status.name }}</option>
                   </select>
+
+                  <button class="update-btn" @click="updateSingleBooking(booking.bookingID, index)" 
+                          :disabled="!selectedStatus[index]">
+                    Update Status
+                  </button>
                   <br>
                 </template>
               </div>
-              <center><button class="submit" type="submit" @click="updateStatus">UPDATE</button></center>
             </div>
           </div>
         </div>
@@ -209,64 +214,85 @@ export default {
         console.error('Error fetching bookings:', error);
       });
     },
+    /*
     updateStatus() {
-  // ตรวจสอบว่ามีการจองที่ใช้งานอยู่ (ไม่ได้ยกเลิก) ใดๆ ที่ขาดสถานะหรือไม่
-      const activeBookings = this.bookings.filter(booking => booking.bookingStatusID !== 3);
-      const activeIndices = activeBookings.map(booking => 
-        this.bookings.findIndex(b => b.bookingID === booking.bookingID)
-      );
+    // ตรวจสอบว่ามีการจองที่ใช้งานอยู่ (ไม่ได้ยกเลิก) ใดๆ ที่ขาดสถานะหรือไม่
+    const activeBookings = this.bookings.filter(booking => booking.bookingStatusID !== 3);
+    const activeIndices = activeBookings.map(booking => 
+      this.bookings.findIndex(b => b.bookingID === booking.bookingID)
+    );
+    
+    const hasNullStatus = activeIndices.some(index => 
+      this.selectedStatus[index] === null || this.selectedStatus[index] === undefined
+    );
+    
+    if (hasNullStatus) {
+      alert('กรุณาเลือกสถานะสำหรับการจองที่ใช้งานอยู่ทั้งหมด');
+      return;
+    }
+    
+    // แสดง loading indicator
+    this.isLoading = true;
+    
+    // อัพเดตทีละรายการแบบลำดับ
+    const processUpdates = async () => {
+      try {
+        // วนลูปทีละรายการ
+        for (let i = 0; i < activeBookings.length; i++) {
+          const booking = activeBookings[i];
+          const index = this.bookings.findIndex(b => b.bookingID === booking.bookingID);
+          const selectedStatus = this.selectedStatus[index];
+          
+          // ส่งคำขอไปยัง API และรอจนกว่าจะเสร็จ
+          await axios.post('http://localhost:3000/staffApprove', {
+            bookId: booking.bookingID,
+            status: selectedStatus
+          });
+          
+          // หน่วงเวลาเล็กน้อยระหว่างการอัพเดตแต่ละรายการ (500ms)
+          if (i < activeBookings.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+        
+        // เมื่อเสร็จสิ้น
+        alert('อัพเดตทุกการจองเรียบร้อยแล้ว!');
+        this.closeBookingPopup();
+        this.isLoading = false;
+      } catch (error) {
+        console.error('เกิดข้อผิดพลาดในการอัพเดต:', error);
+        alert('เกิดข้อผิดพลาดในการอัพเดต โปรดลองอีกครั้ง');
+        this.isLoading = false;
+      }
+    };
+    
+    // เริ่มกระบวนการอัพเดต
+    processUpdates();
+  }, */
+
+  // ฟังก์ชันสำหรับอัพเดตสถานะทีละรายการ
+  updateSingleBooking(bookingID, index) {
+      const selectedStatus = this.selectedStatus[index];
       
-      const hasNullStatus = activeIndices.some(index => 
-        this.selectedStatus[index] === null || this.selectedStatus[index] === undefined
-      );
-      
-      if (hasNullStatus) {
-        alert('กรุณาเลือกสถานะสำหรับการจองที่ใช้งานอยู่ทั้งหมด');
+      if (!selectedStatus) {
+        alert('กรุณาเลือกสถานะก่อนอัพเดต');
         return;
       }
       
-      let updateCount = 0;
-      const totalUpdates = activeBookings.length;
-      
-      // อัพเดตเฉพาะการจองที่ใช้งานอยู่
-      activeBookings.forEach(booking => {
-        const index = this.bookings.findIndex(b => b.bookingID === booking.bookingID);
-        const selectedStatus = this.selectedStatus[index];
-        const { bookingID } = booking;
+      axios.post('http://localhost:3000/staffApprove', {
+        bookId: bookingID,
+        status: selectedStatus
+      })
+      .then(response => {
+        console.log(`อัพเดตสถานะสำหรับการจอง ID ${bookingID} สำเร็จ`);
+        alert(`อัพเดตสถานะเรียบร้อยแล้ว!`);
         
-        // เตรียมข้อมูลที่จะส่งไปยัง API
-        const updateData = { 
-          bookId: bookingID, 
-          status: selectedStatus
-        };
-        
-        // กรณียกเลิกการจอง (status = 3) ให้บันทึกเวลายกเลิก
-        if (selectedStatus === 3) {
-          // ใช้เวลาปัจจุบันเป็นเวลายกเลิก
-          const now = new Date();
-          updateData.cancelTime = now.toISOString().slice(0, 19).replace('T', ' '); // Format: YYYY-MM-DD HH:MM:SS
-        }
-        
-        // กรณียืนยันการจอง (status = 2) ให้บันทึกเวลายืนยัน
-        if (selectedStatus === 2) {
-          const now = new Date();
-          updateData.confirmTime = now.toISOString().slice(0, 19).replace('T', ' '); // Format: YYYY-MM-DD HH:MM:SS
-        }
-        
-        axios.post('http://localhost:3000/staffApprove', updateData)
-        .then(response => {
-          console.log(`อัพเดตสถานะสำหรับการจอง ID ${bookingID}: ${response.data.message}`);
-          updateCount++;
-          
-          if (updateCount === totalUpdates) {
-            // เมื่ออัพเดททุกรายการเสร็จแล้ว
-            alert('อัพเดตทุกการจองเรียบร้อยแล้ว!');
-            this.closeBookingPopup();
-          }
-        })
-        .catch(error => {
-          console.error(`เกิดข้อผิดพลาดในการอัพเดตสถานะสำหรับการจอง ID ${bookingID}:`, error);
-        });
+        // รีโหลดข้อมูลการจองเพื่อแสดงสถานะล่าสุด
+        this.fetchBookings();
+      })
+      .catch(error => {
+        console.error(`เกิดข้อผิดพลาดในการอัพเดตสถานะสำหรับการจอง ID ${bookingID}:`, error);
+        alert('เกิดข้อผิดพลาดในการอัพเดต โปรดลองอีกครั้ง');
       });
     }
   },
@@ -291,106 +317,4 @@ export default {
 <style scoped>
 @import '@/assets/css/SuperStaffHome.css';
 @import '@/assets/css/Calendar.css';
-
-/* เพิ่มการปรับแต่งสำหรับแก้ปัญหาปฏิทินถูกแถบบังส่วนบนล่าง */
-.content-wrapper {
-  padding: 20px;
-  height: 100%;
-  overflow-y: auto;
-}
-
-.content h1, .content h4 {
-  padding-left: 0;
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.calendar-container {
-  width: 100%;
-  height: auto;
-  overflow: visible;
-  margin: 20px 0;
-  padding-bottom: 50px; /* เพิ่มพื้นที่ด้านล่าง */
-}
-
-/* แก้ไข CSS ปฏิทินให้แสดงผลเต็มพื้นที่ที่มี */
-:deep(.calendar-container) {
-  max-height: none;
-  overflow: visible;
-}
-
-:deep(.calendar-grid) {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
-
-/* สไตล์สำหรับ popup การจัดการการจอง */
-.booking-popup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* พื้นหลังสีเข้มโปร่งใส */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.booking-popup-content {
-  background-color: white;
-  border-radius: 8px;
-  width: 80%;
-  max-width: 700px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.booking-popup-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f5f5f5;
-  padding: 15px 20px;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  border-bottom: 1px solid #ddd;
-}
-
-.booking-popup-header h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.close-btn {
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-}
-
-.close-btn:hover {
-  color: #000;
-}
-
-.booking-popup-body {
-  padding: 20px;
-}
-
-.no-bookings {
-  text-align: center;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 5px;
-  margin: 10px 0;
-}
-
-/* ปรับแต่งสไตล์ slot ให้เหมาะกับ popup */
-.slot {
-  margin-bottom: 15px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 15px;
-}
 </style>

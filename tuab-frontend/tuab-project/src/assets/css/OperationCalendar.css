@@ -303,6 +303,211 @@
     background-color: #95a5a6;
     cursor: not-allowed;
   }
+
+  .calendar-day.holiday-day.in-selected-range {
+    background-color: #ffdddd !important;
+    color: #ff0000 !important;
+    border: 1px solid #ff0000 !important;
+  }
+  
+  /* เพิ่ม CSS สำหรับ dropdown เลือกเดือน/ปี */
+  .month-dropdown {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+  }
+  
+  .month-dropdown select {
+    padding: 5px 10px;
+    margin: 0 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: white;
+    font-size: 16px;
+  }
+  
+  /* CSS สำหรับแสดงข้อความผิดพลาด */
+  .error-message {
+    color: #d32f2f;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+  
+  .error-input {
+    border: 1px solid #d32f2f !important;
+    background-color: #fff8f8 !important;
+  }
+  
+  /* CSS สำหรับแสดงรายการวันหยุดในช่วงที่เลือก */
+  .holidays-in-range {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #fff0f0;
+    border: 1px solid #ffcccc;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .holidays-in-range h3 {
+    color: #d32f2f;
+    margin-top: 0;
+    text-align: center;
+    border-bottom: 1px solid #ffcccc;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .holidays-in-range ul {
+    padding-left: 20px;
+    margin: 10px 0;
+  }
+  
+  .holidays-in-range li {
+    color: #d32f2f;
+    margin: 5px 0;
+  }
+  
+  .warning-text {
+    font-size: 12px;
+    color: #d32f2f;
+    font-style: italic;
+    margin-top: 10px;
+    text-align: center;
+  }
+  
+  /* สไตล์สำหรับ dropdown icon ข้างๆชื่อเดือน */
+  .selected-month-display {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .selected-month-display h2 {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+  }
+  
+  .dropdown-icon {
+    font-size: 12px;
+    margin-left: 5px;
+    transition: transform 0.2s;
+  }
+  
+  .selected-month-display:hover .dropdown-icon {
+    transform: translateY(2px);
+  }
+  
+  /* สไตล์สำหรับ dropdown panel */
+  .month-dropdown-panel {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    padding: 15px;
+    margin-top: 5px;
+    width: 280px;
+  }
+  
+  .month-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .month-dropdown label {
+    font-weight: bold;
+    margin-bottom: 3px;
+  }
+  
+  .month-dropdown select {
+    padding: 8px 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    width: 100%;
+  }
+  
+  .apply-date-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+  }
+  
+  .apply-date-btn:hover {
+    background-color: #45a049;
+  }
+  
+  /* ทำให้วันหยุดยังแสดงเป็นสีแดงเสมอ แม้อยู่ในช่วงที่เลือก */
+  .calendar-day.holiday-day.in-selected-range {
+    background-color: #ffdddd !important;
+    color: #ff0000 !important;
+    border: 1px solid #ff0000 !important;
+  }
+  
+  /* ทำให้วันเสาร์-อาทิตย์ยังแสดงเป็นสีเทาเสมอ แม้อยู่ในช่วงที่เลือก */
+  .calendar-day.closed-day.in-selected-range {
+    background-color: #f0f0f0 !important;
+    color: #999999 !important;
+    border: 1px solid #dddddd !important;
+  }
+  
+  .weekend-item {
+    color: #666666;
+    margin: 5px 0;
+  }
+  
+  .holidays-in-range h4 {
+    color: #666666;
+    margin: 10px 0 5px 0;
+    font-size: 14px;
+  }
+  
+  .calendar-day[class*="selected"],
+  .calendar-day[class*="range"] {
+     border: none !important;
+     outline: none !important;
+     box-shadow: none !important;
+  }
+  
+  .calendar-container .calendar-grid .calendar-day,
+  .calendar-day.selected-start-date,
+  .calendar-day.selected-end-date,
+  .calendar-day.in-selected-range,
+  .calendar-day.operation-day,
+  .calendar-day:hover {
+     border: none !important;
+     outline: none !important;
+     box-shadow: none !important;
+  }
+  
+  /* เพิ่ม CSS สำหรับ description textarea */
+  .description-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    margin-bottom: 15px;
+  }
+  
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+  }
   
   /* วันที่มีการตั้งค่าเปิดทำการ */
   .operation-day:not(.outside-month):not(.closed-day):not(.holiday-day):not(.past-date) {

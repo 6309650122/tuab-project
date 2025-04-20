@@ -1,132 +1,185 @@
 <template>
-    <div class="calendar-container">
-      <!-- ส่วนหัวของปฏิทิน -->
-      <div class="calendar-header">
-        <button @click="changeMonth(-1)" class="btn-nav">&lt;</button>
-        <h2>{{ currentMonthName }} {{ currentYear }}</h2>
-        <button @click="changeMonth(1)" class="btn-nav">&gt;</button>
+  <div class="calendar-container">
+    <!-- ส่วนหัวของปฏิทิน -->
+    <div class="calendar-header">
+  <button @click="changeMonth(-1)" class="btn-nav">&lt;</button>
+  
+  <!-- เพิ่ม dropdown ที่มี icon -->
+  <div class="selected-month-display">
+    <h2 @click="toggleMonthDropdown">{{ currentMonthName }} {{ currentYear }} <i class="dropdown-icon">▼</i></h2>
+    
+    <!-- Dropdown panel -->
+    <div v-if="showMonthDropdown" class="month-dropdown-panel" @click.stop>
+      <div class="month-dropdown">
+        <label>เดือน:</label>
+        <select v-model="selectedMonth" @change="updateSelectedMonth">
+          <option v-for="(month, index) in thaiMonths" :key="index" :value="index">
+            {{ month }}
+          </option>
+        </select>
+        
+        <label>ปี:</label>
+        <select v-model="selectedYear" @change="updateSelectedYear">
+          <option v-for="year in availableYears" :key="year" :value="year">
+            {{ year }}
+          </option>
+        </select>
+        
+        <button class="apply-date-btn" @click="applyDateSelection">ตกลง</button>
       </div>
-      
-      <!-- คำอธิบายสีต่างๆ ในปฏิทิน -->
-      <div class="calendar-legend">
-        <div class="legend-item">
-          <span class="legend-color bg-green"></span>
-          <span>เปิดทำการ</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-color bg-special"></span>
-          <span>วันพิเศษ</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-color bg-red"></span>
-          <span>วันหยุดนักขัตฤกษ์</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-color bg-gray"></span>
-          <span>ปิดทำการ</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-color bg-operation"></span>
-          <span>วันที่ตั้งค่าเปิดทำการ</span>
-        </div>
+    </div>
+  </div>
+  
+  <button @click="changeMonth(1)" class="btn-nav">&gt;</button>
+</div>
+    
+    <!-- คำอธิบายสีต่างๆ ในปฏิทิน -->
+    <div class="calendar-legend">
+      <div class="legend-item">
+        <span class="legend-color bg-green"></span>
+        <span>เปิดทำการ</span>
       </div>
-      
-      <!-- ส่วนของการตั้งค่าวันเปิด-ปิดสนาม (สำหรับ SuperStaff) -->
-      <div class="operation-settings">
-        <form @submit.prevent="submitOperationForm" class="operation-form">
-          <div class="form-group">
-            <label>วันที่เริ่มต้น</label>
-            <input 
-              type="date" 
-              v-model="startDate" 
-              :min="minDate" 
-              class="form-control"
-              required
-              readonly
-              @click="isSelectingStartDate = true"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label>วันที่สิ้นสุด</label>
-            <input 
-              type="date" 
-              v-model="endDate" 
-              :min="nextDayStartDate" 
-              class="form-control"
-              required
-              readonly
-              @click="isSelectingEndDate = true"
-            >
-          </div>
-          
-          <button type="submit" class="btn-add" :disabled="isSubmitting">บันทึก</button>
-        </form>
+      <div class="legend-item">
+        <span class="legend-color bg-special"></span>
+        <span>วันพิเศษ</span>
       </div>
-      
-      <!-- กริดปฏิทิน -->
-      <div class="calendar-grid">
-        <!-- วันในสัปดาห์ - เริ่มต้นจากวันอาทิตย์ -->
-        <div v-for="day in weekDays" :key="day" class="calendar-weekday">
-          {{ day }}
+      <div class="legend-item">
+        <span class="legend-color bg-red"></span>
+        <span>วันหยุดนักขัตฤกษ์</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color bg-gray"></span>
+        <span>ปิดทำการ</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color bg-operation"></span>
+        <span>วันที่ตั้งค่าเปิดทำการ</span>
+      </div>
+    </div>
+    
+    <!-- ส่วนของการตั้งค่าวันเปิด-ปิดสนาม (สำหรับ SuperStaff) -->
+    <div class="operation-settings">
+      <form @submit.prevent="submitOperationForm" class="operation-form">
+        <div class="form-group">
+          <label>วันที่เริ่มต้น</label>
+          <input 
+            type="date" 
+            v-model="startDate" 
+            :min="minDate" 
+            class="form-control"
+            required
+            readonly
+            @click="isSelectingStartDate = true"
+            :class="{ 'error-input': startDateError }"
+          >
+          <span v-if="startDateError" class="error-message">{{ startDateError }}</span>
         </div>
         
-        <!-- วันในเดือน -->
-        <div
-          v-for="(day, index) in calendarDays"
-          :key="index"
-          :class="[
-            'calendar-day',
-            { 'outside-month': day.isOutsideMonth },
-            { 'closed-day': day.isClosed },
-            { 'special-bookable-day': day.isSpecialBookableDay },
-            { 'holiday-day': day.isHoliday },
-            { 'special-day': day.isSpecialDay && !day.isHoliday && !day.isClosed && !day.isSpecialBookableDay },
-            { 'open-day': !day.isOutsideMonth && !day.isClosed && !day.isHoliday && !day.isSpecialDay },
-            { 'past-date': day.isPastDate },
-            { 'operation-day': day.isOperationDay },
-            { 'selected-start-date': isSameDate(day.date, new Date(startDate)) },
-            { 'selected-end-date': isSameDate(day.date, new Date(endDate)) },
-            { 'in-selected-range': isDateInSelectedRange(day.date) }
-          ]"
-          @click="handleDateClick(day)"
-          :title="day.isHoliday ? day.holidayName : day.isSpecialDay ? day.specialDayName : ''"
-        >
-          <div class="day-number">{{ day.date.getDate() }}</div>
-          <div v-if="day.isHoliday" class="holiday-name">{{ day.holidayName }}</div>
-          <div v-else-if="day.isSpecialDay" class="special-day-name">{{ day.specialDayName }}</div>
-          <div v-if="day.isOperationDay" class="operation-indicator">●</div>
+        <div class="form-group">
+          <label>วันที่สิ้นสุด</label>
+          <input 
+            type="date" 
+            v-model="endDate" 
+            :min="nextDayStartDate" 
+            class="form-control"
+            required
+            readonly
+            @click="isSelectingEndDate = true"
+            :class="{ 'error-input': endDateError }"
+          >
+          <span v-if="endDateError" class="error-message">{{ endDateError }}</span>
         </div>
+        
+        <button type="submit" class="btn-add" :disabled="isSubmitting || hasDateErrors">บันทึก</button>
+      </form>
+    </div>
+    
+    <!-- กริดปฏิทิน -->
+    <div class="calendar-grid">
+      <!-- วันในสัปดาห์ - เริ่มต้นจากวันอาทิตย์ -->
+      <div v-for="day in weekDays" :key="day" class="calendar-weekday">
+        {{ day }}
       </div>
       
-      <!-- Popup สำหรับแจ้งเตือน -->
-      <div class="holiday-modal" v-if="showSuccessPopup">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>สำเร็จ</h3>
-            <button class="btn-close" @click="closeSuccessPopup">&times;</button>
-          </div>
-          <div class="modal-body">
-            <p>บันทึกข้อมูลเรียบร้อยแล้ว</p>
-            <button class="btn-add" @click="closeSuccessPopup">ตกลง</button>
-          </div>
+      <!-- วันในเดือน -->
+      <div
+        v-for="(day, index) in calendarDays"
+        :key="index"
+        :class="[
+          'calendar-day',
+          { 'outside-month': day.isOutsideMonth },
+          { 'closed-day': day.isClosed },
+          { 'special-bookable-day': day.isSpecialBookableDay },
+          { 'holiday-day': day.isHoliday }, /* วันหยุดจะแสดงเป็นสีแดงเสมอ */
+          { 'special-day': day.isSpecialDay && !day.isHoliday && !day.isClosed && !day.isSpecialBookableDay },
+          { 'open-day': !day.isOutsideMonth && !day.isClosed && !day.isHoliday && !day.isSpecialDay },
+          { 'past-date': day.isPastDate },
+          { 'operation-day': day.isOperationDay },
+          { 'selected-start-date': isSameDate(day.date, new Date(startDate)) },
+          { 'selected-end-date': isSameDate(day.date, new Date(endDate)) },
+          { 'in-selected-range': isDateInSelectedRange(day.date) }
+        ]"
+        @click="handleDateClick(day)"
+        :title="day.isHoliday ? day.holidayName : day.isSpecialDay ? day.specialDayName : ''"
+      >
+        <div class="day-number">{{ day.date.getDate() }}</div>
+        <div v-if="day.isHoliday" class="holiday-name">{{ day.holidayName }}</div>
+        <div v-else-if="day.isSpecialDay" class="special-day-name">{{ day.specialDayName }}</div>
+      </div>
+    </div>
+    
+    <!-- Popup สำหรับแจ้งเตือน -->
+    <div class="holiday-modal" v-if="showSuccessPopup">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>สำเร็จ</h3>
+          <button class="btn-close" @click="closeSuccessPopup">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>บันทึกข้อมูลเรียบร้อยแล้ว</p>
         </div>
       </div>
-      
-      <div class="holiday-modal" v-if="showErrorPopup">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>ข้อผิดพลาด</h3>
-            <button class="btn-close" @click="closeErrorPopup">&times;</button>
+    </div>
+    
+    <div class="holiday-modal" v-if="showErrorPopup">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>ข้อผิดพลาด</h3>
+          <button class="btn-close" @click="closeErrorPopup">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>{{ errorMessage || 'กรุณาเลือกวันที่เริ่มต้นและสิ้นสุดที่แตกต่างกัน' }}</p>
+          <br>
+          <button class="btn-add" @click="closeErrorPopup">ปิด</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popup สำหรับกรอกคำอธิบาย (Description) -->
+    <div class="holiday-modal" v-if="showDescriptionPopup">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>กรอกคำอธิบาย</h3>
+          <button class="btn-close" @click="closeDescriptionPopup">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>กรุณากรอกคำอธิบายสำหรับการเปิด-ปิดสนาม</p><br>
+          <div class="form-group">
+            <label>คำอธิบาย</label>
+            <textarea 
+              v-model="operationDescription" 
+              class="form-control description-textarea" 
+              placeholder="เช่น: เปิดทำการสำหรับภาคการศึกษาที่ 1/68"
+            ></textarea>
           </div>
-          <div class="modal-body">
-            <p>กรุณาเลือกวันที่เริ่มต้นและสิ้นสุดที่แตกต่างกัน</p>
-            <button class="btn-add" @click="closeErrorPopup">ปิด</button>
+          <div class="modal-actions">
+            <button class="btn-add" @click="saveWithDescription">บันทึก</button>
           </div>
         </div>
       </div>
     </div>
-  </template>
+  </div>
+</template>
   
   <script>
   import axios from 'axios';
@@ -134,10 +187,21 @@
   export default {
     name: 'OperationCalendar',
     data() {
+      // คำนวณปีที่สามารถเลือกได้ (ปัจจุบัน และอีก 3 ปีถัดไป)
+      const currentYear = new Date().getFullYear();
+      const years = [currentYear];
+      for (let i = 1; i <= 3; i++) {
+        years.push(currentYear + i);
+      }
       return {
         currentDate: new Date(),
         selectedDate: null,
         weekDays: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
+        thaiMonths: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+                    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'],
+        availableYears: years,
+        selectedMonth: new Date().getMonth(),
+        selectedYear: new Date().getFullYear(),
         holidays: [],
         thaiHolidays: [
           // ข้อมูลสำรองสำหรับวันหยุดไทย
@@ -154,6 +218,7 @@
           { date: new Date(new Date().getFullYear(), 11, 24), name: 'วันคริสต์มาสอีฟ', type: 'special' },
           { date: new Date(new Date().getFullYear(), 11, 25), name: 'วันคริสต์มาส', type: 'special' }
         ],
+        weekendDaysInRange: [],
         buddhistHolidays: [],
         operationDays: [], // วันที่เปิดทำการ
         
@@ -168,7 +233,20 @@
         
         // เพิ่มตัวแปรสำหรับการเลือกวันที่
         isSelectingStartDate: false,
-        isSelectingEndDate: false
+        isSelectingEndDate: false,
+        showMonthDropdown: false,
+        
+         // สำหรับ description
+        showDescriptionPopup: false,
+        operationDescription: '',
+
+        // เพิ่มตัวแปรสำหรับข้อความผิดพลาด
+        startDateError: '',
+        endDateError: '',
+        errorMessage: '',
+        
+        // วันหยุดในช่วงที่เลือก
+        holidaysInSelectedRange: []
       }
     },
     computed: {
@@ -179,7 +257,7 @@
       },
       currentYear() {
         // แสดงปีเป็น พ.ศ.
-        return this.currentDate.getFullYear() + 543;
+        return this.currentDate.getFullYear();
       },
       calendarDays() {
         const monthStart = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
@@ -232,6 +310,7 @@
         }
         return days;
       },
+
       nextDayStartDate() {
         if (this.startDate) {
           const date = new Date(this.startDate);
@@ -239,9 +318,27 @@
           return date.toISOString().split('T')[0];
         } 
         return null;
+      },
+
+      hasDateErrors() {
+        return this.startDateError !== '' || this.endDateError !== '';
       }
     },
     methods: {
+
+      // อัพเดทเดือนและปีที่เลือกจาก dropdown
+      updateSelectedMonth() {
+        // ไม่ต้องปิด dropdown ทันทีหลังเลือกเดือน
+        this.currentDate = new Date(this.currentDate.getFullYear(), this.selectedMonth, 1);
+      },
+
+      updateSelectedYear() {
+        // ไม่ต้องปิด dropdown ทันทีหลังเลือกปี
+        this.currentDate = new Date(this.selectedYear, this.currentDate.getMonth(), 1);
+        // โหลดข้อมูลวันหยุดใหม่เมื่อเปลี่ยนปี
+        this.fetchHolidays(this.selectedYear);
+      },
+
       // เพิ่มฟังก์ชันตรวจสอบว่าวันที่อยู่ในช่วงที่เลือกหรือไม่
       isDateInSelectedRange(date) {
         if (!this.startDate || !this.endDate) return false;
@@ -353,46 +450,142 @@
           this.fetchHolidays(this.currentDate.getFullYear());
         }
       },
+
+      formatThaiDate(date) {
+        // แปลงวันที่เป็นรูปแบบไทย (วัน/เดือน/ปี พ.ศ.)
+        const thaiDay = date.getDate();
+        const thaiMonth = this.thaiMonths[date.getMonth()];
+        const thaiYear = date.getFullYear() + 543;
+        
+        return `${thaiDay} ${thaiMonth} ${thaiYear}`;
+      },
   
       handleDateClick(day) {
-        // ไม่สามารถเลือกวันที่นอกเดือน, วันที่ปิด, วันหยุด, หรือวันที่ผ่านไปแล้ว
-        if (day.isOutsideMonth || day.isPastDate) {
+      // ไม่สามารถเลือกวันที่นอกเดือน, วันที่ปิด, วันหยุด, หรือวันที่ผ่านไปแล้ว
+      if (day.isOutsideMonth || day.isPastDate) {
+        return;
+      }
+      
+      // ไม่สามารถเลือกวันหยุดนักขัตฤกษ์เป็นวันเริ่มต้นหรือวันสิ้นสุด
+      if (day.isHoliday) {
+        this.showErrorPopup = true;
+        this.errorMessage = `ไม่สามารถเลือกวันหยุดนักขัตฤกษ์ "${day.holidayName}" เป็นวันเริ่มต้นหรือวันสิ้นสุดได้`;
+        return;
+      }
+
+      // ไม่สามารถเลือกวันเสาร์-อาทิตย์เป็นวันเริ่มต้นหรือวันสิ้นสุด
+      if (day.isClosed) {
+        this.showErrorPopup = true;
+        this.errorMessage = `ไม่สามารถเลือกวันเสาร์-อาทิตย์เป็นวันเริ่มต้นหรือวันสิ้นสุดได้`;
+        return;
+      }
+      
+      if (this.isSelectingStartDate) {
+        // ถ้ากำลังเลือกวันเริ่มต้น
+        const formattedDate = this.formatDateParam(day.date);
+        this.startDate = formattedDate;
+        this.isSelectingStartDate = false;
+        this.startDateError = ''; // ล้างข้อความผิดพลาด
+        
+        // ถ้ายังไม่มีวันสิ้นสุด หรือวันสิ้นสุดน้อยกว่าวันเริ่มต้น ให้เริ่มเลือกวันสิ้นสุดทันที
+        if (!this.endDate || new Date(this.endDate) <= new Date(this.startDate)) {
+          this.isSelectingEndDate = true;
+          this.endDate = ''; // รีเซ็ตวันสิ้นสุด
+          this.endDateError = ''; // ล้างข้อความผิดพลาด
+        } else {
+          // ตรวจสอบวันหยุดในช่วงที่เลือก
+          this.checkHolidaysInRange();
+        }
+      } else if (this.isSelectingEndDate) {
+        // ถ้ากำลังเลือกวันสิ้นสุด
+        const formattedDate = this.formatDateParam(day.date);
+        
+        // ตรวจสอบว่าวันที่เลือกต้องมากกว่าวันเริ่มต้น
+        if (new Date(formattedDate) <= new Date(this.startDate)) {
+          this.showErrorPopup = true;
+          this.errorMessage = 'วันสิ้นสุดต้องมาหลังวันเริ่มต้น';
           return;
         }
         
-        if (this.isSelectingStartDate) {
-          // ถ้ากำลังเลือกวันเริ่มต้น
-          const formattedDate = this.formatDateParam(day.date);
-          this.startDate = formattedDate;
-          this.isSelectingStartDate = false;
-          
-          // ถ้ายังไม่มีวันสิ้นสุด หรือวันสิ้นสุดน้อยกว่าวันเริ่มต้น ให้เริ่มเลือกวันสิ้นสุดทันที
-          if (!this.endDate || new Date(this.endDate) <= new Date(this.startDate)) {
-            this.isSelectingEndDate = true;
-            this.endDate = ''; // รีเซ็ตวันสิ้นสุด
-          }
-        } else if (this.isSelectingEndDate) {
-          // ถ้ากำลังเลือกวันสิ้นสุด
-          const formattedDate = this.formatDateParam(day.date);
-          
-          // ตรวจสอบว่าวันที่เลือกต้องมากกว่าวันเริ่มต้น
-          if (new Date(formattedDate) <= new Date(this.startDate)) {
-            this.showErrorPopup = true;
-            return;
-          }
-          
-          this.endDate = formattedDate;
-          this.isSelectingEndDate = false;
-        } else {
-          // เลือกวันเริ่มต้นโดยปริยาย ถ้าไม่ได้อยู่ในโหมดเลือกวัน
-          const formattedDate = this.formatDateParam(day.date);
-          this.startDate = formattedDate;
-          this.isSelectingEndDate = true; // เปลี่ยนเป็นโหมดเลือกวันสิ้นสุดต่อ
-          this.endDate = ''; // รีเซ็ตวันสิ้นสุด
-        }
+        this.endDate = formattedDate;
+        this.isSelectingEndDate = false;
+        this.endDateError = ''; // ล้างข้อความผิดพลาด
         
-        console.log(`เลือกวันที่: ${day.date.toLocaleDateString()} - startDate: ${this.startDate}, endDate: ${this.endDate}`);
-      },
+        // ตรวจสอบวันหยุดในช่วงที่เลือก
+        this.checkHolidaysInRange();
+      } else {
+        // เลือกวันเริ่มต้นโดยปริยาย ถ้าไม่ได้อยู่ในโหมดเลือกวัน
+        const formattedDate = this.formatDateParam(day.date);
+        this.startDate = formattedDate;
+        this.isSelectingEndDate = true; // เปลี่ยนเป็นโหมดเลือกวันสิ้นสุดต่อ
+        this.endDate = ''; // รีเซ็ตวันสิ้นสุด
+        this.startDateError = ''; // ล้างข้อความผิดพลาด
+        this.endDateError = ''; // ล้างข้อความผิดพลาด
+        this.holidaysInSelectedRange = []; // รีเซ็ตรายการวันหยุดในช่วง
+      }
+      
+      console.log(`เลือกวันที่: ${day.date.toLocaleDateString()} - startDate: ${this.startDate}, endDate: ${this.endDate}`);
+    },
+
+      // เพิ่มฟังก์ชันตรวจสอบวันหยุดในช่วงที่เลือก
+      checkHolidaysInRange() {
+      if (!this.startDate || !this.endDate) {
+        this.holidaysInSelectedRange = [];
+        this.weekendDaysInRange = [];
+        return;
+      }
+      
+      const start = new Date(this.startDate);
+      const end = new Date(this.endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+      
+      // รวมวันหยุดทั้งหมด
+      const allHolidays = [
+        ...this.thaiHolidays.map(h => ({ 
+          date: new Date(h.date), 
+          name: h.name 
+        })),
+        ...this.buddhistHolidays.map(h => ({ 
+          date: new Date(h.date), 
+          name: h.name 
+        })),
+        ...this.holidays
+          .filter(h => h.type === 'holiday')
+          .map(h => ({ 
+            date: new Date(h.date), 
+            name: h.name 
+          }))
+      ];
+      
+      // หาวันหยุดที่อยู่ในช่วงที่เลือก
+      this.holidaysInSelectedRange = allHolidays.filter(holiday => {
+        const holidayDate = new Date(holiday.date);
+        holidayDate.setHours(0, 0, 0, 0);
+        return holidayDate > start && holidayDate < end;
+      });
+      
+      // หาวันเสาร์-อาทิตย์ที่อยู่ในช่วงที่เลือก
+      const weekendDays = [];
+      const currentDate = new Date(start);
+      currentDate.setDate(currentDate.getDate() + 1); // เริ่มจากวันหลังวันเริ่มต้น
+      
+      while (currentDate < end) {
+        // 0 คือวันอาทิตย์, 6 คือวันเสาร์
+        if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+          weekendDays.push({
+            date: new Date(currentDate),
+            name: currentDate.getDay() === 0 ? 'วันอาทิตย์' : 'วันเสาร์'
+          });
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      this.weekendDaysInRange = weekendDays;
+      
+      console.log('วันหยุดในช่วงที่เลือก:', this.holidaysInSelectedRange);
+      console.log('วันเสาร์-อาทิตย์ในช่วงที่เลือก:', this.weekendDaysInRange);
+    },
   
       formatDateParam(date) {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -501,33 +694,66 @@
       submitOperationForm() {
         if (this.startDate && this.endDate && this.startDate === this.endDate) {
           this.showErrorPopup = true;
+          this.errorMessage = 'วันเริ่มต้นและวันสิ้นสุดต้องไม่เป็นวันเดียวกัน';
           return;
         }
-  
-        if (this.startDate && this.endDate && !this.isSubmitting && this.startDate !== this.endDate) {
-          this.isSubmitting = true;
-          
-          const formData = {
-            opID: this.operationID,
-            Nstart: this.startDate,
-            Nend: this.endDate
-          };
-  
-          console.log('Sending form data:', formData);
-  
-          axios.post('http://localhost:3000/editoperation', formData)
-            .then((response) => {
-              console.log('Response from server:', response);
-              this.showSuccessPopup = true;
-              this.fetchOperationDays(); // ดึงข้อมูลวันเปิดทำการใหม่หลังจากบันทึก
-            })
-            .catch((error) => {
-              console.error('Error inserting operation into database:', error);
-            })
-            .finally(() => {
-              this.isSubmitting = false;
-            });
+        
+        if (this.hasDateErrors) {
+          this.showErrorPopup = true;
+          this.errorMessage = 'กรุณาแก้ไขข้อผิดพลาดก่อนบันทึก';
+          return;
         }
+
+        if (this.startDate && this.endDate && !this.isSubmitting && this.startDate !== this.endDate) {
+          // ตรวจสอบวันหยุดในช่วงที่เลือกอีกครั้ง
+          this.checkHolidaysInRange();
+          
+          // แสดง popup ให้กรอก description แทนที่จะบันทึกทันที
+          this.showDescriptionPopup = true;
+        }
+      },
+
+      // ฟังก์ชันใหม่สำหรับปิด popup description
+      closeDescriptionPopup() {
+        this.showDescriptionPopup = false;
+      },
+
+      // ฟังก์ชันใหม่สำหรับบันทึกข้อมูลพร้อม description
+      saveWithDescription() {
+        this.isSubmitting = true;
+        
+        const formData = {
+          // ไม่ส่ง opID ไป - เพื่อให้บันทึกเป็นรายการใหม่ทุกครั้ง
+          // opID: this.operationID, --> ลบบรรทัดนี้ออก
+          Nstart: this.startDate,
+          Nend: this.endDate,
+          description: this.operationDescription,
+          holidaysInRange: this.holidaysInSelectedRange.length > 0 
+            ? this.holidaysInSelectedRange.map(h => ({ 
+                date: this.formatDateParam(h.date), 
+                name: h.name 
+              })) 
+            : []
+        };
+
+        console.log('Sending form data:', formData);
+
+        axios.post('http://localhost:3000/editoperation', formData)
+          .then((response) => {
+            console.log('Response from server:', response);
+            this.showSuccessPopup = true;
+            this.showDescriptionPopup = false;
+            this.operationDescription = ''; // รีเซ็ตค่า description
+            this.fetchOperationDays(); // ดึงข้อมูลวันเปิดทำการใหม่
+          })
+          .catch((error) => {
+            console.error('Error inserting operation into database:', error);
+            this.showErrorPopup = true;
+            this.errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + (error.response?.data?.message || error.message);
+          })
+          .finally(() => {
+            this.isSubmitting = false;
+          });
       },
       
       closeSuccessPopup() {
@@ -543,9 +769,8 @@
         axios.get('http://localhost:3000/checkoperation')
           .then(response => {
             if (response.data && response.data.length > 0) {
-              // ปรับรูปแบบการเก็บข้อมูลเป็นรูปแบบที่สามารถนำไปใช้ได้ง่าย
+              // เก็บข้อมูลทั้งหมดที่ได้รับจาก API
               this.operationDays = response.data.map(op => {
-                // แปลงรูปแบบวันที่ให้เป็น ISO String ถ้าจำเป็น
                 let startDate = op.startDate;
                 let endDate = op.endDate;
                 
@@ -562,14 +787,10 @@
                 return {
                   operationID: op.operationID,
                   startDate: startDate,
-                  endDate: endDate
+                  endDate: endDate,
+                  description: op.description
                 };
               });
-              
-              // เก็บ operationID ล่าสุดสำหรับใช้ในการอัปเดต
-              if (this.operationDays.length > 0) {
-                this.operationID = this.operationDays[0].operationID;
-              }
               
               console.log('Loaded operation days:', this.operationDays);
             } else {
@@ -581,6 +802,37 @@
             console.error('Error fetching operation days:', error);
             this.operationDays = [];
           });
+      },
+
+      // เพิ่มเมธอดใหม่
+      toggleMonthDropdown() {
+        this.showMonthDropdown = !this.showMonthDropdown;
+        
+        // เพิ่ม event listener เพื่อปิด dropdown เมื่อคลิกข้างนอก
+        if (this.showMonthDropdown) {
+          setTimeout(() => {
+            document.addEventListener('click', this.closeMonthDropdown);
+          }, 0);
+        }
+      },
+
+      closeMonthDropdown(event) {
+        // ตรวจสอบว่าคลิกนอกพื้นที่ dropdown หรือไม่
+        const dropdown = document.querySelector('.month-dropdown-panel');
+        const trigger = document.querySelector('.selected-month-display h2');
+        
+        if (dropdown && !dropdown.contains(event.target) && 
+            trigger && !trigger.contains(event.target)) {
+          this.showMonthDropdown = false;
+          document.removeEventListener('click', this.closeMonthDropdown);
+        }
+      },
+
+      applyDateSelection() {
+        // อัพเดทวันที่และปิด dropdown
+        this.currentDate = new Date(this.selectedYear, this.selectedMonth, 1);
+        this.showMonthDropdown = false;
+        document.removeEventListener('click', this.closeMonthDropdown);
       },
       
       // กลับไปหน้าหลัก

@@ -23,20 +23,8 @@
         <span class="legend-color bg-gray"></span>
         <span>ปิดทำการ</span>
       </div>
-      <div class="legend-item">
-        <span class="legend-color bg-pink"></span>
-        <span>Shift 1</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-color bg-purple"></span>
-        <span>Shift 2</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-color bg-blue"></span>
-        <span>Shift 1&2</span>
-      </div>
       <div class="manage-button">
-        <button @click="openManageModal" class="btn-manage">จัดการการทำงาน</button>
+        <button @click="openManageModal" class="btn-manage">แก้ไขการทำงาน</button>
       </div>
     </div>
     
@@ -58,9 +46,7 @@
           { 'holiday-day': day.isHoliday },
           { 'special-day': day.isSpecialDay && !day.isHoliday && !day.isClosed && !day.isSpecialBookableDay },
           { 'open-day': !day.isOutsideMonth && !day.isClosed && !day.isHoliday && !day.isSpecialDay },
-          { 'past-date': day.isPastDate },
-          { 'registered': isRegisteredDate(day.date) },
-          getShiftClass(day.date)
+          { 'past-date': day.isPastDate }
         ]"
         @click="handleDateClick(day)"
         :title="day.isHoliday ? day.holidayName : day.isSpecialDay ? day.specialDayName : ''"
@@ -68,6 +54,20 @@
         <div class="day-number">{{ day.date.getDate() }}</div>
         <div v-if="day.isHoliday" class="holiday-name">{{ day.holidayName }}</div>
         <div v-else-if="day.isSpecialDay" class="special-day-name">{{ day.specialDayName }}</div>
+        
+        <!-- แสดงรูป PNG สำหรับวันที่มีการลงทะเบียน -->
+        <div v-if="isRegisteredDate(day.date)" class="shift-icon-container">
+          <template v-if="getShiftType(day.date) === '3'">
+            <!-- แสดงทั้ง shift 1 และ shift 2 เมื่อเป็น shift 3 -->
+            <img src="/numberone.png" alt="Shift 1" class="shift-icon-img">
+            <img src="/numbertwo.png" alt="Shift 2" class="shift-icon-img">
+          </template>
+          <template v-else>
+            <!-- แสดงตามปกติสำหรับ shift อื่นๆ -->
+            <img v-if="getShiftType(day.date) === '1'" src="/numberone.png" alt="Shift 1" class="shift-icon-img">
+            <img v-else-if="getShiftType(day.date) === '2'" src="/numbertwo.png" alt="Shift 2" class="shift-icon-img">
+          </template>
+        </div>
       </div>
     </div>
 
@@ -79,7 +79,7 @@
         </div>
         <div class="modal-body">
           <div v-if="registeredDates.length === 0" class="no-shifts">
-            ไม่พบข้อมูลการลงทะเบียนเวรทำงาน
+            ไม่พบข้อมูลการลงทะเบียนทำงาน
           </div>
           <table v-else class="shift-table">
             <thead>
@@ -92,7 +92,15 @@
             <tbody>
               <tr v-for="(shift, index) in registeredDates" :key="index">
                 <td>{{ formatThaiDate(new Date(shift.workingDate)) }}</td>
-                <td>{{ displayShiftText(shift.workingShift) }}</td>
+                <td>
+                  <!-- แสดงรูป PNG พร้อมกับข้อความใน Modal -->
+                  <span class="shift-label">
+                    <img v-if="shift.workingShift === '1'" src="/numberone.png" alt="Shift 1" class="shift-icon-img">
+                    <img v-else-if="shift.workingShift === '2'" src="/numbertwo.png" alt="Shift 2" class="shift-icon-img">
+                    <img v-else-if="shift.workingShift === '3'" src="/numberthree.png" alt="Shift 1&2" class="shift-icon-img">
+                    {{ displayShiftText(shift.workingShift) }}
+                  </span>
+                </td>
                 <td>
                   <button class="btn-edit" @click="editShift(shift)">แก้ไข</button>
                   <button class="btn-delete-small" @click="confirmDeleteShift(shift)">ลบ</button>
@@ -104,18 +112,22 @@
       </div>
     </div>
     
-    <!-- เพิ่ม Shift Selection Popup -->
+    <!-- Shift Selection Popup -->
     <div class="shift-popup" v-if="showShiftPopup">
       <div class="shift-popup-content">
         <h3>{{ isEditing ? 'แก้ไข Shift วันที่' : 'เลือก Shift วันที่' }} {{ formatDateForDisplay(selectedDate) }}</h3>
         <div class="shift-options">
           <div class="shift-option">
             <input type="checkbox" id="shift1" v-model="selectedShifts" value="1">
-            <label for="shift1">Shift 1: 17.00 - 17.30</label>
+            <label for="shift1">
+              <img src="/numberone.png" alt="Shift 1" class="shift-icon-img"> 17.00 - 17.30
+            </label>
           </div>
           <div class="shift-option">
             <input type="checkbox" id="shift2" v-model="selectedShifts" value="2">
-            <label for="shift2">Shift 2: 17.30 - 18.00</label>
+            <label for="shift2">
+              <img src="/numbertwo.png" alt="Shift 2" class="shift-icon-img"> 17.30 - 18.00
+            </label>
           </div>
         </div>
         <div class="shift-buttons">
@@ -201,7 +213,7 @@ export default {
     },
     currentYear() {
       // แสดงปีเป็น พ.ศ.
-      return this.currentDate.getFullYear() + 543;
+      return this.currentDate.getFullYear();
     },
     calendarDays() {
       const monthStart = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
@@ -756,99 +768,43 @@ export default {
 
 <style scoped>
 @import '@/assets/css/StaffShiftCalendar.css';
+/* CSS สำหรับรูป PNG ของ Shift */
+.shift-icon-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  vertical-align: middle;
+}
 
-/* เพิ่ม CSS สำหรับ Popup */
-.shift-popup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
+.legend-icon {
+  display: inline-flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
 }
 
-.shift-popup-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 80%;
-  max-width: 400px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+.shift-icon-container {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
 }
 
-.shift-popup h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.shift-options {
-  margin-bottom: 20px;
-}
-
-.shift-option {
-  margin-bottom: 10px;
-}
-
-.shift-buttons {
+.shift-label {
   display: flex;
-  justify-content: space-between;
-}
-
-.btn-cancel, .btn-save {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-cancel {
-  background-color: #f2f2f2;
-}
-
-.btn-save {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.success-popup, .warning-popup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
 }
 
-.success-popup-content, .warning-popup-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 80%;
-  max-width: 400px;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+.shift-label img {
+  margin-right: 5px;
 }
 
-.success-popup button, .warning-popup button {
-  margin-top: 15px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  background-color: #4CAF50;
-  color: white;
-  cursor: pointer;
-}
-
-.warning-popup button {
-  background-color: #f44336;
+.shift-icon-container {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  display: flex;
+  gap: 2px; /* เว้นระยะห่างระหว่างรูป */
 }
 </style>

@@ -16,7 +16,7 @@
       <div class="content">
         <br><br><br>
         <h1>Book the Archery</h1><br>
-        <h2>Please select an available lane</h2><br>
+        <h2>Please select an available lane on Calendar</h2><br>
         <div v-if="selectedDate">
           <h2>Booking for: {{ selectedDate }}</h2>
           <!-- <p Align="center">
@@ -57,10 +57,13 @@
 </template>
 
 <script>
-
+import UserCalendar from './UserCalendar.vue';
 import NotToken from '../components/NotToken.vue';
 import axios from 'axios';
 export default {
+  components:{
+    UserCalendar
+  },
   data() {
     return {
       status: false,
@@ -235,5 +238,6 @@ export default {
 </script>
 
 <style scoped>
+@import '@/assets/css/Calendar.css';
 @import '@/assets/css/Booking.css';
 </style>

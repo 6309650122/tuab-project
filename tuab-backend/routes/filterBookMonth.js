@@ -86,35 +86,41 @@ router.get('/', jsonParser, function(req, res, next) {
 
 // ฟังก์ชันจัดรูปแบบวันที่และเวลาเป็นเวลาไทย
 // ฟังก์ชันจัดรูปแบบวันที่และเวลาเป็นเวลาไทย
+// ฟังก์ชันจัดรูปแบบวันที่และเวลาเป็นเวลาไทย
 function formatDateTime(dateTimeString) {
-  const dateTime = new Date(dateTimeString);
+  if (!dateTimeString) return '';
   
-  // เพิ่มเวลา 7 ชั่วโมงเพื่อให้เป็นเวลาไทย
-  dateTime.setHours(dateTime.getHours() + 7);
-  
-  const options = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'UTC'  // ใช้ UTC เพราะเราได้ปรับเวลาด้วย +7 ชั่วโมงแล้ว
-  };
-  
-  // ใช้ toLocaleString เพื่อจัดรูปแบบวันที่และเวลา
-  const formattedDateTime = dateTime.toLocaleString('en-US', options);
-  
-  // แปลงรูปแบบจาก MM/DD/YYYY, HH:MM เป็น DD/MM/YYYY HH:MM
-  const parts = formattedDateTime.split(', ');
-  if (parts.length === 2) {
-    const dateParts = parts[0].split('/');
-    if (dateParts.length === 3) {
-      return `${dateParts[1]}/${dateParts[0]}/${dateParts[2]} ${parts[1]}`;
+  try {
+    console.log('Input datetime:', dateTimeString);
+    
+    const dateTime = new Date(dateTimeString);
+    
+    // ตรวจสอบความถูกต้องของวันที่
+    if (isNaN(dateTime.getTime())) {
+      console.error('Invalid date format:', dateTimeString);
+      return dateTimeString;
     }
+    
+    // เพิ่มเวลา 7 ชั่วโมงเพื่อให้เป็นเวลาไทย
+    const thaiTime = new Date(dateTime.getTime() + (7 * 60 * 60 * 1000));
+    
+    // จัดรูปแบบวันที่ DD/MM/YYYY
+    const day = thaiTime.getUTCDate().toString().padStart(2, '0');
+    const month = (thaiTime.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = thaiTime.getUTCFullYear();
+    
+    // จัดรูปแบบเวลา HH:MM
+    const hours = thaiTime.getUTCHours().toString().padStart(2, '0');
+    const minutes = thaiTime.getUTCMinutes().toString().padStart(2, '0');
+    
+    const formattedTime = `${day}/${month}/${year} ${hours}:${minutes}`;
+    console.log('Formatted datetime:', formattedTime);
+    
+    return formattedTime;
+  } catch (error) {
+    console.error('Error formatting datetime:', error);
+    return dateTimeString;
   }
-  
-  return formattedDateTime;
 }
 
 module.exports = router;

@@ -147,7 +147,7 @@
       },
       currentYear() {
         // แสดงปีเป็น พ.ศ.
-        return this.currentDate.getFullYear() + 543;
+        return this.currentDate.getFullYear();
       },
       calendarDays() {
         const monthStart = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);

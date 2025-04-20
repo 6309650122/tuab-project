@@ -15,7 +15,7 @@
       <div class="content">
         <br>
         <h1>Edit Settings</h1>
-        <h2>Please select start and end date to set an opening day</h2><br><br>
+        <h2>Please select start and end date to set an opening day</h2><br>
 
         <OperationCalendar/>
       </div> 
