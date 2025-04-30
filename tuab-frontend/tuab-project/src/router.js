@@ -18,6 +18,10 @@ import BaseCalendar from './pages/BaseCalendar.vue'
 import StaffShiftCalendar from './pages/StaffShiftCalendar.vue'
 import StaffCalendar from './pages/StaffCalendar.vue'
 import OperationCalendar from './pages/OperationCalendar.vue'
+import StaffDashboard from './pages/StaffDashboard.vue'
+import SuperStaffDashboard from './pages/SuperStaffDashboard.vue'
+import OperationList from './pages/OperationList.vue'
+import Dashboard from './pages/Dashboard.vue'
 
 
 Vue.use(Router)
@@ -114,6 +118,26 @@ export default new Router({
         path: '/Operation-calendar',
         name: 'OperationCalendar',
         component: OperationCalendar
+    },
+    {
+        path: '/StaffDashboard',
+        name: 'StaffDashboard',
+        component: StaffDashboard
+    },
+    {
+        path: '/SuperStaffDashboard',
+        name: 'SuperStaffDashboard',
+        component: SuperStaffDashboard
+    },
+    {
+        path: '/OperationList',
+        name: 'OperationList',
+        component: OperationList
+    },
+    {
+        path: '/Dashboard',
+        name: 'Dashboard',
+        component: Dashboard
     }
     ]
 })

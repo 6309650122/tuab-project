@@ -32,6 +32,9 @@ var filterBookMonthRouter = require('./routes/filterBookMonth');
 var holidaysRouter = require('./routes/holidays');
 var googleholidaysRouter = require('./routes/googleholidays');
 var staffScheduleRouter = require('./routes/staffTimesheet');
+var dashboardRouter = require('./routes/dashboard');
+var allstaffRouter = require('./routes/allstaff');
+var countStaffShiftsRouter = require('./routes/countStaffShifts');
 
 var app = express();
 
@@ -71,6 +74,9 @@ app.use('/filterBookMonth', filterBookMonthRouter);
 app.use('/holidays', holidaysRouter); 
 app.use('/googleholidays', googleholidaysRouter);
 app.use('/staffTimesheet', staffScheduleRouter);
+app.use('/dashboard', dashboardRouter);
+app.use('/allstaff', allstaffRouter);
+app.use('/countStaffShifts', countStaffShiftsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -17,7 +17,15 @@
         <h1>Edit Settings</h1>
         <h2>Please select start and end date to set an opening day</h2><br>
 
-        <OperationCalendar/>
+        <div class="operation-components">
+          <div class="calendar-wrapper">
+            <OperationCalendar/>
+          </div>
+          <br><br><br><br><br>
+          <div class="list-wrapper">
+            <OperationList/>
+          </div>
+        </div>
       </div> 
     </body>
   </div>
@@ -27,10 +35,12 @@
 import NotToken from '../components/NotToken.vue';
 import axios from 'axios';
 import OperationCalendar from './OperationCalendar.vue';
+import OperationList from './OperationList.vue';
 
 export default {
   components:{
-    OperationCalendar
+    OperationCalendar,
+    OperationList
   },
   data() {
     return {
@@ -175,4 +185,20 @@ export default {
 <style scoped>
 @import '@/assets/css/Operation.css';
 @import '@/assets/css/Calendar.css';
+
+.operation-components {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* ระยะห่างระหว่างคอมโพเนนต์ */
+  width: 100%;
+}
+
+.calendar-wrapper {
+  width: 100%;
+}
+
+.list-wrapper {
+  width: 100%;
+  margin-top: 20px; /* เพิ่มระยะห่างด้านบน */
+}
 </style>

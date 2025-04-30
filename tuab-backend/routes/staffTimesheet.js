@@ -8,31 +8,58 @@ var jwt = require('jsonwebtoken');
 var connection = require('../connection/db.js');
 
 // API สำหรับดึงข้อมูลสต๊าฟตามวันที่เลือก
-router.get('/', jsonParser, function(req, res) {
-  const { selectedDate } = req.query; // รับวันที่จาก query string
-
-  if (!selectedDate) {
-    return res.status(400).json({ error: 'workingDate is required' });
-  }
-
-  // ดึงข้อมูลจากฐานข้อมูล
-  connection.execute(
-    "SELECT username, DATE_FORMAT(workingDate, '%Y-%m-%d') AS workingDate, workingShift FROM WorkSchedule WHERE workingDate = ?",
-    [selectedDate],
-    (err, rows) => {
-      if (err) {
-        console.error('Error executing SELECT query:', err);
-        return res.status(500).json({ error: 'Database query error' });
-      }
-
-      if (rows.length === 0) {
-        return res.json({ message: 'No staff working on this date' });
-      }
-
-      // ส่งข้อมูลกลับ
-      res.json({ staff: rows });
+// ในไฟล์ staffTimesheet.js ที่มีอยู่แล้ว
+router.get('/', (req, res) => {
+  const { selectedDate, startDate, endDate, username } = req.query;
+  
+  let query, params;
+  
+  if (selectedDate) {
+    // กรณีใช้ selectedDate (สำหรับหน้าอื่น ๆ)
+    query = `
+      SELECT w.workID, w.username, w.workingDate, w.workingShift, u.name
+      FROM WorkSchedule w
+      JOIN User u ON w.username = u.username
+      WHERE w.workingDate = ? AND w.isActive IS NULL
+      ORDER BY w.workingDate, w.workingShift
+    `;
+    params = [selectedDate];
+  } else if (startDate && endDate) {
+    // กรณีใช้ช่วงวันที่ (สำหรับหน้า Staff Timesheet)
+    if (username) {
+      query = `
+        SELECT w.workID, w.username, w.workingDate, w.workingShift, u.name
+        FROM WorkSchedule w
+        JOIN User u ON w.username = u.username
+        WHERE w.workingDate BETWEEN ? AND ? AND w.username = ? AND w.isActive IS NULL
+        ORDER BY w.workingDate, w.workingShift
+      `;
+      params = [startDate, endDate, username];
+    } else {
+      query = `
+        SELECT w.workID, w.username, w.workingDate, w.workingShift, u.name
+        FROM WorkSchedule w
+        JOIN User u ON w.username = u.username
+        WHERE w.workingDate BETWEEN ? AND ? AND w.isActive IS NULL
+        ORDER BY w.workingDate, w.workingShift
+      `;
+      params = [startDate, endDate];
     }
-  );
+  } else {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'ต้องระบุ selectedDate หรือ startDate และ endDate' 
+    });
+  }
+  
+  connection.query(query, params, function(err, results) {
+    if (err) {
+      console.error('Error fetching timesheet data:', err);
+      res.status(500).json({ success: false, message: 'Failed to fetch timesheet data' });
+      return;
+    }
+    res.json({ success: true, staff: results });
+  });
 });
 
 module.exports = router;

@@ -12,10 +12,10 @@
         <p Align=center><button class="menu" @click="booking"><span> BOOK NOW </span></button></p><br>
         <p Align=center><button class="menu" @click="cancel"><span> CANCEL BOOKING </span></button></p><br>
         <p Align=center><button class="menu" @click="history"><span> BOOKING HISTORY </span></button></p><br>
-        <p Align=center><button class="menu" @click="StaffTimesheet"><span><img src="setting.png" width=9%> Staff Timesheet </span></button></p><br>
-        <p Align=center><button class="staffmenu" @click="shiftSchedule"><span><img src="setting.png" width=9%> Manage Timesheet </span></button></p><br>
-        <p Align=center><button class="staffmenu" @click="operation"><span><img src="setting.png" width=9%> Edit Settings </span></button></p><br>
-
+        <p Align=center><button class="staffmenu tooltip-btn" @click="StaffTimesheet" data-tooltip="ดูตารางเวลาการทำงานของฉันและสมาชิก"><span><img src="setting.png" width=9%> Staff Timesheet </span></button></p><br>
+        <p Align=center><button class="staffmenu tooltip-btn" @click="shiftSchedule" data-tooltip="จัดการตารางเวลาการทำงานของฉัน"><span><img src="setting.png" width=9%> Manage Timesheet </span></button></p><br>
+        <p Align=center><button class="staffmenu tooltip-btn" @click="operation" data-tooltip="แก้ไขช่วงวันเปิดสนาม"><span><img src="setting.png" width=9%> Edit Settings </span></button></p><br>
+        <p Align=center><button class="staffmenu tooltip-btn" @click="Dashboard" data-tooltip="ดูภาพรวมข้อมูลการจองและสถิติต่างๆ"><span><img src="setting.png" width=9%> Dashboard </span></button></p><br>
         <br><br>
         <p Align=center><LogoutBotton /></p>
       </div>
@@ -91,6 +91,7 @@ import axios from 'axios';
 import NotToken from '../components/NotToken.vue';
 import LogoutBotton from '../components/LogoutBotton.vue';
 import StaffCalendar from './StaffCalendar.vue';
+import Dashboard from './Dashboard.vue';
 
 export default {
   components:{
@@ -139,22 +140,26 @@ export default {
     },
     
     booking() {
-      this.$router.replace("booking");
+      console.log("กำลังนำทางไปยัง booking");
+      this.$router.push("booking");
     },
     history() {
-      this.$router.replace("history");
+      this.$router.push("history");
     },
     cancel() {
-      this.$router.replace("cancel");
+      this.$router.push("cancel");
     },
     operation() {
-      this.$router.replace("operation");
+      this.$router.push("operation");
     },
     shiftSchedule() {
-      this.$router.replace("shift-schedule");
+      this.$router.push("shift-schedule");
     },
     StaffTimesheet() {
-      this.$router.replace("staff-timesheet");
+      this.$router.push("staff-timesheet");
+    },
+    Dashboard() {
+      this.$router.push("Dashboard");
     },
     showSlip(booking) {
       const { username, bookingID } = booking;
@@ -317,4 +322,47 @@ export default {
 <style scoped>
 @import '@/assets/css/SuperStaffHome.css';
 @import '@/assets/css/Calendar.css';
+
+.tooltip-btn {
+  position: relative;
+}
+
+.tooltip-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background: #333;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  visibility: hidden;
+  opacity: 0;
+  transition: 0.3s;
+  z-index: 10;
+}
+
+.tooltip-btn::before {
+  content: "";
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+  visibility: hidden;
+  opacity: 0;
+  transition: 0.3s;
+  z-index: 10;
+}
+
+.tooltip-btn:hover::after,
+.tooltip-btn:hover::before {
+  visibility: visible;
+  opacity: 1;
+}
 </style>
