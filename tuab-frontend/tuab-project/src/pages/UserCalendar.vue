@@ -2,7 +2,7 @@
     <div class="calendar-container">
       <div class="calendar-header">
         <button @click="changeMonth(-1)" class="btn-nav">&lt;</button>
-        <h2>{{ currentMonthName }} {{ currentYear }}</h2>
+        <h2><strong>{{ currentMonthName }} {{ currentYear }}</strong></h2>
         <button @click="changeMonth(1)" class="btn-nav">&gt;</button>
       </div>
     
@@ -13,7 +13,7 @@
       <div class="calendar-legend">
         <div class="legend-item">
           <span class="legend-color bg-green"></span>
-          <span>เปิดทำการ (คลิกเพื่อจอง)</span>
+          <span>วันเปิดทำการ (คลิกเพื่อจอง)</span>
         </div>
         <div class="legend-item">
           <span class="legend-color bg-special"></span>

@@ -31,11 +31,6 @@
                 <!-- Shift/Time information -->
                 <div class="time-box">{{ booking.shiftID }}</div>
                 
-                <!-- Status information - always pending for cancellable bookings -->
-                <div class="time-info pending-time">
-                  <strong>Pending</strong>
-                </div>
-                
                 <!-- Cancel button -->
                 <button class="cancel-btn" @click="cancelBooking(booking)">
                   CANCEL

@@ -14,11 +14,9 @@ import Operation from './pages/Operation.vue'
 import ShiftSchedule from './pages/ShiftSchedule.vue'
 import StaffTimesheet from './pages/StaffTimesheet.vue'
 import UserCalendar from './pages/UserCalendar.vue'
-import BaseCalendar from './pages/BaseCalendar.vue'
 import StaffShiftCalendar from './pages/StaffShiftCalendar.vue'
 import StaffCalendar from './pages/StaffCalendar.vue'
 import OperationCalendar from './pages/OperationCalendar.vue'
-import StaffDashboard from './pages/StaffDashboard.vue'
 import SuperStaffDashboard from './pages/SuperStaffDashboard.vue'
 import OperationList from './pages/OperationList.vue'
 import Dashboard from './pages/Dashboard.vue'
@@ -101,11 +99,6 @@ export default new Router({
         component: UserCalendar
     },
     {
-        path: '/base-calendar',
-        name: 'BaseCalendar',
-        component: BaseCalendar
-    },
-    {
         path: '/staffshift-calendar',
         name: 'StaffShiftCalendar',
         component: StaffShiftCalendar
@@ -119,11 +112,6 @@ export default new Router({
         path: '/Operation-calendar',
         name: 'OperationCalendar',
         component: OperationCalendar
-    },
-    {
-        path: '/StaffDashboard',
-        name: 'StaffDashboard',
-        component: StaffDashboard
     },
     {
         path: '/SuperStaffDashboard',

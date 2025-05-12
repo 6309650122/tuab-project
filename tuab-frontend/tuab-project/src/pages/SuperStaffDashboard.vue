@@ -57,25 +57,25 @@
         
         <!-- กราฟรายวัน - สำหรับฟิลเตอร์สัปดาห์ -->
         <div v-if="dateRange === 'week'" class="chart-card">
-            <h2>การจองย้อนหลังภายใน 7 วัน</h2>
+            <h2>การจองสัปดาห์นี้</h2>
             <canvas ref="dailyBookingsChart" style="height: 300px; width: 100%;"></canvas>
         </div>
         
         <!-- กราฟรายวัน - สำหรับฟิลเตอร์เดือน -->
         <div v-if="dateRange === 'month'" class="chart-card">
-            <h2>การจองย้อนหลังภายใน 1 เดือน</h2>
+            <h2>การจองเดือนนี้</h2>
             <canvas ref="dailyBookingsChart" style="height: 300px; width: 100%;"></canvas>
         </div>
         
         <!-- กราฟรายวัน - สำหรับฟิลเตอร์กำหนดเองที่น้อยกว่า 32 วัน -->
         <div v-if="dateRange === 'custom' && customDateRangeDuration < 32" class="chart-card">
-            <h2>การจองย้อนหลังตามช่วงเวลาที่กำหนด</h2>
+            <h2>การจองตามช่วงเวลาที่กำหนด</h2>
             <canvas ref="dailyBookingsChart" style="height: 300px; width: 100%;"></canvas>
         </div>
         
         <!-- กราฟรายเดือน - สำหรับฟิลเตอร์ 3 เดือน -->
         <div v-if="dateRange === '3months'" class="chart-card">
-            <h2>การจองย้อนหลังภายใน 3 เดือน</h2>
+            <h2>การจองย้อนหลัง 3 เดือน</h2>
             <canvas ref="monthlyBookingsChart" style="height: 300px; width: 100%;"></canvas>
         </div>
         
@@ -105,7 +105,7 @@
         
         <!-- การจองแยกตามคณะและบุคลากร (ทุกฟิลเตอร์) -->
         <div class="chart-card">
-            <h2>การจองแยกตามคณะและบุคลากร</h2>
+            <h2>การจองแยกตามกลุ่มนักศึกษาและบุคลากร</h2>
             <canvas ref="facultyPieChart" style="height: 300px; width: 100%;"></canvas>
         </div>
     </div>
@@ -529,7 +529,7 @@ createBookingStatusPieChart() {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#666';
     
-    const message = 'ไม่มีข้อมูลสถานะการจองในวันนี้';
+    const message = 'ไม่พบข้อมูลสถานะการจองในวันนี้';
     
     ctx.fillText(message, ctx.canvas.width / 2, ctx.canvas.height / 2);
     
@@ -558,7 +558,13 @@ createBookingStatusPieChart() {
       responsive: true,
       maintainAspectRatio: false,
       legend: {
-        position: 'bottom'
+        position: 'bottom',
+        labels: {
+          fontStyle: 'bold',
+          fontColor: '#000',
+          fontSize: 12,
+          fontFamily: 'Prompt, sans-serif'
+        }
       },
       tooltips: {
         callbacks: {
@@ -615,7 +621,7 @@ createBookingStatusStackedChart() {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#666';
     
-    let message = 'ไม่มีข้อมูลสถานะการจอง';
+    let message = 'ไม่พบข้อมูลสถานะการจอง';
     if (this.dateRange === 'week') {
       message += 'ในสัปดาห์นี้';
     } else if (this.dateRange === 'month') {
@@ -695,6 +701,15 @@ createBookingStatusStackedChart() {
       ]
     },
     options: {
+        legend: {
+            position: 'top',
+            labels: {
+                fontStyle: 'bold',           // ทำให้ตัวอักษรเป็นตัวหนา
+                fontColor: '#000',           // กำหนดสีตัวอักษรเป็นสีดำ
+                fontSize: 12,                // กำหนดขนาดตัวอักษรเป็น 12px
+                fontFamily: 'Prompt, sans-serif'  // กำหนด font family เป็น Prompt
+            }
+        },
       responsive: true,
       maintainAspectRatio: false,
       scales: {
@@ -702,8 +717,14 @@ createBookingStatusStackedChart() {
           stacked: true,
           scaleLabel: {
             display: true,
-            labelString: this.dateRange === '3months' || (this.dateRange === 'custom' && this.customDateRangeDuration >= 32) ? 'เดือน' : 'วันที่'
-          }
+            labelString: this.dateRange === '3months' || (this.dateRange === 'custom' && this.customDateRangeDuration >= 32) ? 'เดือน' : 'วันที่',
+            fontStyle: 'bold',  
+            fontColor: '#000' 
+          },
+            ticks: {
+                fontStyle: 'bold',  // เพิ่มบรรทัดนี้เพื่อทำให้ค่าบนแกนเป็นตัวหนา
+                fontColor: '#000'   // เพิ่มบรรทัดนี้เพื่อกำหนดสีของค่าบนแกน
+            }
         }],
         yAxes: [{
           stacked: true,
@@ -713,11 +734,15 @@ createBookingStatusStackedChart() {
               if (Number.isInteger(value)) {
                 return value;
               }
-            }
+            },
+            fontStyle: 'bold', 
+            fontColor: '#000'
           },
           scaleLabel: {
             display: true,
-            labelString: 'จำนวนการจอง'
+            labelString: 'จำนวนการจอง',
+            fontStyle: 'bold', 
+            fontColor: '#000'
           }
         }]
       },
@@ -801,7 +826,7 @@ createLaneUsageChart() {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#666';
     
-    let message = 'ไม่มีข้อมูลการใช้งานช่องยิง';
+    let message = 'ไม่พบข้อมูลการใช้งานช่องยิง';
     if (this.dateRange === 'today') {
       message += 'ในวันนี้';
     } else if (this.dateRange === 'week') {
@@ -855,7 +880,11 @@ createLaneUsageChart() {
       responsive: true,
       maintainAspectRatio: false,
       legend: {
-        position: 'right'
+        position: 'right',
+        labels: {
+            fontStyle: 'bold',
+            fontColor: '#000'
+        }
       },
       tooltips: {
         callbacks: {
@@ -900,7 +929,7 @@ createStaffPerformanceChart() {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#666';
     
-    let message = 'ไม่มีข้อมูลประสิทธิภาพการมีส่วนร่วมกับระบบของสมาชิกชมรม';
+    let message = 'ไม่พบข้อมูลประสิทธิภาพการมีส่วนร่วมกับระบบของสมาชิกชมรม';
     if (this.dateRange === 'today') {
       message += 'ในวันนี้';
     } else if (this.dateRange === 'week') {
@@ -948,18 +977,34 @@ createStaffPerformanceChart() {
       ]
     },
     options: {
+    legend: {
+        labels: {
+        fontStyle: 'bold',
+        fontColor: '#000',
+        fontSize: 12,
+        fontFamily: 'Prompt, sans-serif'
+        }
+    },
       responsive: true,
       maintainAspectRatio: false,
       scales: {
         xAxes: [{
           scaleLabel: {
             display: true,
-            labelString: 'สมาชิกชมรม'
-          }
+            labelString: 'สมาชิกชมรม',
+            fontStyle: 'bold',
+            fontColor: '#000'
+          },
+          ticks: {
+            fontStyle: 'bold',
+            fontColor: '#000'
+          },
         }],
         yAxes: [{
           ticks: {
             beginAtZero: true,
+            fontStyle: 'bold',
+            fontColor: '#000',
             callback: function(value) {
               if (value % 1 === 0) {
                 return value;
@@ -968,7 +1013,9 @@ createStaffPerformanceChart() {
           },
           scaleLabel: {
             display: true,
-            labelString: 'จำนวนการจอง'
+            labelString: 'จำนวนการจอง',
+            fontStyle: 'bold',
+            fontColor: '#000'
           }
         }]
       }
@@ -1003,7 +1050,7 @@ createShiftBookingsChart() {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#666';
     
-    const message = 'ไม่มีข้อมูลการจองตาม Shift ในวันนี้';
+    const message = 'ไม่พบข้อมูลการจองตาม Shift ในวันนี้';
     
     ctx.fillText(message, ctx.canvas.width / 2, ctx.canvas.height / 2);
     
@@ -1045,8 +1092,14 @@ createShiftBookingsChart() {
         xAxes: [{
           scaleLabel: {
             display: true,
-            labelString: 'ช่วงเวลา'
-          }
+            labelString: 'ช่วงเวลา',
+            fontStyle: 'bold',
+            fontColor: '#000',
+          },
+          ticks: {
+            fontStyle: 'bold',
+            fontColor: '#000',
+          },
         }],
         yAxes: [{
           ticks: {
@@ -1055,11 +1108,15 @@ createShiftBookingsChart() {
               if (value % 1 === 0) {
                 return value;
               }
-            }
+            },
+            fontStyle: 'bold',
+            fontColor: '#000',
           },
           scaleLabel: {
             display: true,
-            labelString: 'จำนวนการจอง'
+            labelString: 'จำนวนการจอง',
+            fontStyle: 'bold',
+            fontColor: '#000',
           }
         }]
       },
@@ -1176,7 +1233,7 @@ createFacultyPieChart() {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#666';
     
-    let message = 'ไม่มีข้อมูลการจองแยกตามคณะและบุคลากร';
+    let message = 'ไม่พบข้อมูลการจองแยกตามคณะและบุคลากร';
     if (this.dateRange === 'today') {
       message += 'ในวันนี้';
     } else if (this.dateRange === 'week') {
@@ -1228,7 +1285,9 @@ createFacultyPieChart() {
           boxWidth: 15,
           font: {
             size: 12
-          }
+          },
+          fontStyle: 'bold',
+          fontColor: '#000'
         }
       },
       tooltips: {
@@ -1273,7 +1332,7 @@ createDailyBookingsChart() {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#666';
     
-    let message = 'ไม่มีข้อมูลการจองรายวัน';
+    let message = 'ไม่พบข้อมูลการจองรายวัน';
     if (this.dateRange === 'week') {
       message += ' ในสัปดาห์นี้';
     } else if (this.dateRange === 'month') {
@@ -1314,12 +1373,20 @@ createDailyBookingsChart() {
         xAxes: [{
           scaleLabel: {
             display: true,
-            labelString: 'วันที่'
+            labelString: 'วันที่',
+            fontStyle: 'bold',
+            fontColor: '#000',
+          },
+          ticks: {
+            fontStyle: 'bold',
+            fontColor: '#000',
           }
         }],
         yAxes: [{
           ticks: {
             beginAtZero: true,
+            fontStyle: 'bold',
+            fontColor: '#000',
             callback: function(value) {
               if (value % 1 === 0) {
                 return value;
@@ -1328,7 +1395,9 @@ createDailyBookingsChart() {
           },
           scaleLabel: {
             display: true,
-            labelString: 'จำนวนการจอง'
+            labelString: 'จำนวนการจอง',
+            fontStyle: 'bold',
+            fontColor: '#000',
           }
         }]
       },
@@ -1373,7 +1442,7 @@ createMonthlyBookingsChart() {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#666';
     
-    let message = 'ไม่มีข้อมูลการจองรายเดือน';
+    let message = 'ไม่พบข้อมูลการจองรายเดือน';
     if (this.dateRange === '3months') {
       message += ' ใน 3 เดือนที่ผ่านมา';
     } else if (this.dateRange === 'custom') {
@@ -1414,11 +1483,19 @@ createMonthlyBookingsChart() {
         xAxes: [{
           scaleLabel: {
             display: true,
-            labelString: 'เดือน'
+            labelString: 'เดือน',
+            fontStyle: 'bold',
+            fontColor: '#000',
+          },
+          ticks: {
+            fontStyle: 'bold',
+            fontColor: '#000',
           }
         }],
         yAxes: [{
           ticks: {
+            fontStyle: 'bold',
+            fontColor: '#000',
             beginAtZero: true,
             callback: function(value) {
               if (value % 1 === 0) {
@@ -1428,7 +1505,9 @@ createMonthlyBookingsChart() {
           },
           scaleLabel: {
             display: true,
-            labelString: 'จำนวนการจอง'
+            labelString: 'จำนวนการจอง',
+            fontStyle: 'bold',
+            fontColor: '#000',
           }
         }]
       },
@@ -1478,7 +1557,7 @@ createStaffShiftsChart() {
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#666';
         
-        let message = 'ไม่มีข้อมูลประสิทธิภาพการเข้าทำงานของสมาชิกชมรม';
+        let message = 'ไม่พบข้อมูลประสิทธิภาพการเข้าทำงานของสมาชิกชมรม';
         if (this.dateRange === 'today') {
         message += 'ในวันนี้';
         } else if (this.dateRange === 'week') {
@@ -1516,21 +1595,31 @@ createStaffShiftsChart() {
             ticks: {
                 beginAtZero: true,
                 callback: function(value) {
-                if (value % 1 === 0) {
-                    return value;
-                }
-                }
+                    if (value % 1 === 0) {
+                        return value;
+                    }
+                },
+                fontStyle: 'bold',  
+                fontColor: '#000'
             },
             scaleLabel: {
                 display: true,
-                labelString: 'จำนวนชิฟท์'
+                labelString: 'จำนวนชิฟท์',
+                fontStyle: 'bold',  
+                fontColor: '#000'
             }
             }],
             yAxes: [{
             scaleLabel: {
                 display: true,
-                labelString: 'สมาชิกชมรม'
-            }
+                labelString: 'สมาชิกชมรม',
+                fontStyle: 'bold',  
+                fontColor: '#000'
+            },
+            ticks: {
+                fontStyle: 'bold',
+                fontColor: '#000'
+            },
             }]
         }
         };

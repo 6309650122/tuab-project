@@ -2,26 +2,29 @@
   <div class="calendar-container">
     <div class="calendar-header">
       <button @click="changeMonth(-1)" class="btn-nav">&lt;</button>
-      <h2>{{ currentMonthName }} {{ currentYear }}</h2>
+      <h2><strong>{{ currentMonthName }} {{ currentYear }}</strong></h2>
       <button @click="changeMonth(1)" class="btn-nav">&gt;</button>
+    </div>
+
+    <div class="role-info" style="text-align: center; margin-bottom: 10px; padding: 5px; background-color: #f5f5f5; border-radius: 4px;">
+        Role: {{ roleName }}
     </div>
     
     <div class="calendar-legend">
-      <div class="legend-item">
-        <span class="legend-color bg-green"></span>
-        <span>เปิดทำการ</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-color bg-special"></span>
-        <span>วันพิเศษ</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-color bg-red"></span>
-        <span>วันหยุด</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-color bg-gray"></span>
-        <span>ปิดทำการ</span>
+      <div class="legend-items-container">
+        <div class="legend-item">
+          <span class="legend-color bg-green"></span>
+          <span class="legend-color bg-special"></span>
+          <span>วันเปิดทำการ/วันพิเศษ (คลิกเพื่อจัดการ Shift)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color bg-red"></span>
+          <span>วันหยุดนักขัตฤกษ์</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color bg-gray"></span>
+          <span>ปิดทำการ</span>
+        </div>
       </div>
       <div class="manage-button">
         <button @click="openManageModal" class="btn-manage">แก้ไขการทำงาน</button>
@@ -74,18 +77,18 @@
     <div class="manage-modal" v-if="showManageModal">
       <div class="manage-modal-content">
         <div class="modal-header">
-          <h3>จัดการเวรทำงาน</h3>
+          <h3>จัดการ Shift</h3>
           <button class="btn-close" @click="closeManageModal">×</button>
         </div>
         <div class="modal-body">
           <div v-if="registeredDates.length === 0" class="no-shifts">
-            ไม่พบข้อมูลการลงทะเบียนทำงาน
+            ไม่พบข้อมูลการลง Shift
           </div>
           <table v-else class="shift-table">
             <thead>
               <tr>
                 <th>วันที่</th>
-                <th>กะที่ลงทำงาน</th>
+                <th>Shift ที่ลงทำงาน</th>
                 <th>จัดการ</th>
               </tr>
             </thead>
@@ -132,7 +135,6 @@
         </div>
         <div class="shift-buttons">
           <button class="btn-cancel" @click="closeShiftPopup">ยกเลิก</button>
-          <button v-if="isEditing" class="btn-delete" @click="deleteShift">ยกเลิกเวร</button>
           <button class="btn-save" @click="saveShift">บันทึก</button>
         </div>
       </div>
@@ -202,7 +204,8 @@ export default {
       showManageModal: false,
       showConfirmPopup: false,
       confirmMessage: '',
-      shiftToDelete: null
+      shiftToDelete: null,
+      operationEndDate: null
     }
   },
   computed: {
@@ -268,6 +271,26 @@ export default {
     }
   },
   methods: {
+    fetchLatestOperationDay() {
+      axios.get('http://localhost:3000/checkoperation')
+        .then(response => {
+          if (response.data && response.data.length > 0) {
+            // เนื่องจาก API ส่งข้อมูลกลับมาเรียงตาม operationID DESC อยู่แล้ว
+            // จึงสามารถใช้ข้อมูลแรกได้เลย
+            const latestOperation = response.data[0];
+            
+            // แปลงวันที่ string เป็น Date object
+            // ตรวจสอบรูปแบบวันที่ที่ได้จาก API ก่อน
+            // หากมีรูปแบบเป็น "YYYY-MM-DD"
+            this.operationEndDate = new Date(latestOperation.endDate);
+            console.log('Latest operation end date:', this.operationEndDate);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching operation days:', error);
+        });
+    },
+
     formatThaiDate(date) {
       if (!date) return '';
       const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
@@ -289,9 +312,14 @@ export default {
     },
 
     isFieldClosed(date) {
-      // Define your own logic for closed days
-      // Example: วันเสาร์ (6) และ วันอาทิตย์ (0) = ปิด
-      return date.getDay() === 0 || date.getDay() === 6;
+      // ตรวจสอบว่าเป็นวันเสาร์หรืออาทิตย์
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      
+      // ตรวจสอบว่าวันที่เกินกว่า endDate ล่าสุดหรือไม่
+      const isAfterEndDate = this.operationEndDate && date > this.operationEndDate;
+      
+      // วันปิดคือวันที่เป็นวันเสาร์อาทิตย์หรือวันที่อยู่หลัง endDate
+      return isWeekend || isAfterEndDate;
     },
     
     // โหลดรายการวันที่ลงทะเบียนแล้ว
@@ -412,15 +440,21 @@ export default {
       newDate.setMonth(newDate.getMonth() + increment);
       this.currentDate = newDate;
       
-      // โหลดข้อมูลวันหยุดใหม่เมื่อเปลี่ยนปี (implement as needed)
+      // โหลดข้อมูลวันหยุดใหม่เมื่อเปลี่ยนปี
       if (this.currentDate.getFullYear() !== new Date().getFullYear()) {
         this.loadHolidays(this.currentDate.getFullYear());
       }
     },
 
     handleDateClick(day) {
+      // ถ้าไม่ใช่วันนอกเดือน และไม่ใช่วันปิด (รวมถึงไม่เกินวัน endDate) และไม่ใช่วันหยุด และไม่ใช่วันที่ผ่านมาแล้ว
       if ((!day.isOutsideMonth && !day.isClosed && !day.isHoliday && !day.isPastDate) || 
           (day.isSpecialBookableDay && !day.isPastDate)) {
+        // เงื่อนไขเพิ่มเติมเพื่อตรวจสอบว่าวันที่ไม่เกิน endDate ล่าสุด
+        if (this.operationEndDate && day.date > this.operationEndDate) {
+          return; // ถ้าเกิน endDate ล่าสุด ไม่ทำอะไร
+        }
+        
         this.selectedDate = day.date;
         const formattedDate = this.formatDateParam(day.date);
         console.log(`วันที่ที่เลือก: ${formattedDate}`);
@@ -479,7 +513,7 @@ export default {
         .catch(error => {
           console.error('Error checking existing schedule:', error);
           this.showWarningPopup = true;
-          this.warningMessage = 'เกิดข้อผิดพลาดในการตรวจสอบตารางงาน';
+          this.warningMessage = 'เกิดข้อผิดพลาดในการตรวจสอบ Shift';
         });
     },
         
@@ -528,25 +562,25 @@ export default {
           console.error('Error deleting shift schedule:', error);
           this.closeConfirmPopup();
           this.showWarningPopup = true;
-          this.warningMessage = `เกิดข้อผิดพลาดในการยกเลิกเวร: ${error.message}`;
+          this.warningMessage = `เกิดข้อผิดพลาดในการยกเลิก Shift: ${error.message}`;
         });
     },
 
     confirmDeleteShift(shift) {
       this.shiftToDelete = shift;
       console.log('Shift to delete:', shift); // เพิ่ม log สำหรับ debug
-      this.confirmMessage = `ยืนยันการยกเลิกเวรวันที่ ${this.formatThaiDate(new Date(shift.workingDate))}?`;
+      this.confirmMessage = `ยืนยันการยกเลิก Shift วันที่ ${this.formatThaiDate(new Date(shift.workingDate))}?`;
       this.showConfirmPopup = true;
     },
 
     deleteShift() {
       if (!this.existingScheduleId) {
         this.showWarningPopup = true;
-        this.warningMessage = 'ไม่พบข้อมูลเวรที่ต้องการยกเลิก';
+        this.warningMessage = 'ไม่พบข้อมูล Shift ที่ต้องการยกเลิก';
         return;
       }
       
-      this.confirmMessage = `ยืนยันการยกเลิกเวรวันที่ ${this.formatDateForDisplay(this.selectedDate)}?`;
+      this.confirmMessage = `ยืนยันการยกเลิก Shift วันที่ ${this.formatDateForDisplay(this.selectedDate)}?`;
       this.showConfirmPopup = true;
       this.shiftToDelete = { workID: this.existingScheduleId }; // ใช้ workID แทน id
       this.closeShiftPopup();
@@ -752,11 +786,13 @@ export default {
   },
   mounted() {
     console.log('Calendar component mounted');
-    // Load initial holidays
+  
+    // เรียกใช้ method เพื่อดึงข้อมูล operation days
+    this.fetchLatestOperationDay();
+    
+    // โค้ดเดิม
     this.loadHolidays();
-    // Get username from localStorage
     this.username = localStorage.getItem('username') || '';
-    // โหลดรายการวันที่ลงทะเบียนแล้ว
     if (this.username) {
       this.loadRegisteredDates();
     }

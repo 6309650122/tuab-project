@@ -51,7 +51,7 @@
               <input 
                 type="text" 
                 v-model="searchTerm" 
-                placeholder="ค้นหา..." 
+                placeholder="Search..." 
                 class="search-input"
               />
               <button class="btn-search" @click="applyFilters">
@@ -65,18 +65,18 @@
           
           <div class="date-filter" v-show="activeFilter === 'custom'">
             <div class="date-range">
-              <span>ตั้งแต่วันที่:</span>
+              <span>From:</span>
               <input type="date" v-model="startDateFilter" />
             </div>
             <div class="date-range">
-              <span>ถึงวันที่:</span>
+              <span>To:</span>
               <input type="date" v-model="endDateFilter" />
             </div>
             <button class="btn-filter" @click="applyFilters">
-              <i class="fas fa-search"></i> ค้นหา
+              <i class="fas fa-search"></i> Search
             </button>
             <button class="btn-clear-filter" @click="clearFilters">
-              <i class="fas fa-times"></i> ล้างตัวกรอง
+              <i class="fas fa-times"></i> Clear
             </button>
           </div>
         </div>
@@ -88,7 +88,7 @@
 
         <div class="timesheet-list">
           <div v-if="workSchedules.length === 0" class="empty-state">
-            <p>ไม่พบข้อมูลการปฏิบัติงาน</p>
+            <p>Not found work schedule</p>
           </div>
           
           <!-- ส่วนของตาราง Vue Good Table -->
@@ -106,12 +106,12 @@
                 perPageDropdown: [3, 6, 9, 18],
                 dropdownAllowAll: false,
                 setCurrentPage: currentPage,
-                nextLabel: 'ถัดไป',
-                prevLabel: 'ก่อนหน้า',
-                rowsPerPageLabel: 'แสดงมากสุด',
-                ofLabel: 'จาก',
-                pageLabel: 'หน้า', // for 'pages' mode
-                allLabel: 'ทั้งหมด',
+                nextLabel: 'Next',
+                prevLabel: 'Back',
+                rowsPerPageLabel: 'Most',
+                ofLabel: 'from',
+                pageLabel: 'pages', // for 'pages' mode
+                allLabel: 'All',
               }"
               styleClass="vgt-table striped"
               @on-page-change="onPageChange"
@@ -144,7 +144,7 @@
               </template>
               
               <div slot="emptystate">
-                ไม่พบข้อมูลการปฏิบัติงาน
+                Not found work schedule
               </div>
             </vue-good-table>
           </div>
@@ -179,35 +179,35 @@ export default {
       currentOperationPeriod: null,
       columns: [
         {
-          label: 'วันที่',
+          label: 'Date',
           field: 'workingDate',
           tdClass: 'text-center',
           thClass: 'text-center',
           sortable: true,
         },
         {
-          label: 'วัน',
+          label: 'Day',
           field: 'dayName',
           tdClass: 'text-center',
           thClass: 'text-center',
           sortable: false,
         },
         {
-          label: 'กะ',
+          label: 'Shift',
           field: 'workingShift',
           tdClass: 'text-center',
           thClass: 'text-center',
           sortable: true,
         },
         {
-          label: 'สถานะ',
+          label: 'Status',
           field: 'status',
           tdClass: 'text-center',
           thClass: 'text-center',
           sortable: false,
         },
         {
-          label: 'เจ้าหน้าที่',
+          label: 'Staff',
           field: 'staffName',
           tdClass: 'text-left',
           thClass: 'text-left',
@@ -220,7 +220,7 @@ export default {
         '2': '17:30-18:00',
         '3': '17:00-18:00'
       },
-      dayNames: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']
+      dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     };
   },
 
@@ -543,11 +543,11 @@ getStatusClass(dateString) {
       
       switch (statusClass) {
         case 'status-today':
-          return 'วันนี้';
+          return 'Today';
         case 'status-past':
-          return 'ผ่านมาแล้ว';
+          return 'Passed';
         case 'status-upcoming':
-          return 'กำลังจะมาถึง';
+          return 'Coming';
         default:
           return '';
       }

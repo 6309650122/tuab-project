@@ -2,7 +2,7 @@
 <div class="calendar-container">
   <div class="calendar-header">
     <button @click="changeMonth(-1)" class="btn-nav">&lt;</button>
-    <h2>{{ currentMonthName }} {{ currentYear }}</h2>
+    <h2><strong>{{ currentMonthName }} {{ currentYear }}</strong></h2>
     <button @click="changeMonth(1)" class="btn-nav">&gt;</button>
   </div>
 
@@ -13,11 +13,8 @@
   <div class="calendar-legend">
     <div class="legend-item">
       <span class="legend-color bg-green"></span>
-      <span>เปิดทำการ (คลิกเพื่อจอง)</span>
-    </div>
-    <div class="legend-item">
       <span class="legend-color bg-special"></span>
-      <span>วันพิเศษ (คลิกเพื่อจอง)</span>
+      <span>วันเปิดทำการ/วันพิเศษ (คลิกเพื่อจัดการการจอง)</span>
     </div>
     <div class="legend-item">
       <span class="legend-color bg-red"></span>
@@ -26,9 +23,6 @@
     <div class="legend-item">
       <span class="legend-color bg-gray"></span>
       <span>ปิดทำการ</span>
-    </div>
-    <div v-if="roleName === 'Super Staff' || roleName === 'Staff'" class="staff-controls">
-      <button @click="showHolidayModal = true" class="btn-manage">จัดการวันหยุด</button>
     </div>
   </div>
   

@@ -6,7 +6,7 @@
   
   <!-- เพิ่ม dropdown ที่มี icon -->
   <div class="selected-month-display">
-    <h2 @click="toggleMonthDropdown">{{ currentMonthName }} {{ currentYear }} <i class="dropdown-icon">▼</i></h2>
+    <h2 @click="toggleMonthDropdown"><strong>{{ currentMonthName }} {{ currentYear }}</strong><i class="dropdown-icon">▼</i></h2>
     
     <!-- Dropdown panel -->
     <div v-if="showMonthDropdown" class="month-dropdown-panel" @click.stop>
@@ -37,11 +37,8 @@
     <div class="calendar-legend">
       <div class="legend-item">
         <span class="legend-color bg-green"></span>
-        <span>เปิดทำการ</span>
-      </div>
-      <div class="legend-item">
         <span class="legend-color bg-special"></span>
-        <span>วันพิเศษ</span>
+        <span>วันเปิดทำการ/วันพิเศษ (คลิกเพื่อเลือกช่วงเวลาเปิดสนาม)</span>
       </div>
       <div class="legend-item">
         <span class="legend-color bg-red"></span>

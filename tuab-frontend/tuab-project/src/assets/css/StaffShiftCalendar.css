@@ -328,19 +328,27 @@
 
   /* CSS สำหรับปุ่มจัดการเวรและหน้าต่างจัดการ */
 
-.calendar-legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  margin: 0 10px;
-}
+  .calendar-legend {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+  
+  .legend-items-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+    margin-left: 65px;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
 
 .legend-color {
   width: 15px;
@@ -350,11 +358,11 @@
 }
 
 .manage-button {
-  margin-left: 15px;
+  margin-top: 5px;
 }
 
 .btn-manage {
-  background-color: #4CAF50;
+  background-color: #5296d5;
   color: white;
   border: none;
   padding: 5px 10px;
@@ -747,6 +755,23 @@
 
 .warning-popup button {
   background-color: #f44336;
+}
+
+.confirm-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.confirm-buttons .btn-cancel {
+  background-color: #f2f2f2;
+  color: #333;
+}
+
+.confirm-buttons .btn-delete {
+  background-color: #f44336;
+  color: white;
 }
   
   @media (max-width: 650px) {
