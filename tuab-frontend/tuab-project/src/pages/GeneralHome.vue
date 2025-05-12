@@ -65,7 +65,7 @@ export default {
   },
   methods: {
     booking() {
-      this.$router.replace("booking");
+      this.$router.replace("bookingProcess");
     },
     history() {
       this.$router.replace("history");

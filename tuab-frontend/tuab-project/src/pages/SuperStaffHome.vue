@@ -141,7 +141,7 @@ export default {
     
     booking() {
       console.log("กำลังนำทางไปยัง booking");
-      this.$router.push("booking");
+      this.$router.push("bookingProcess");
     },
     history() {
       this.$router.push("history");
@@ -330,9 +330,9 @@ export default {
 .tooltip-btn::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: 130%;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 50%;            /* ตำแหน่งกึ่งกลางด้านบนของปุ่ม */
+  right: -10px;        /* เริ่มจากด้านขวาของปุ่ม */
+  transform: translateX(100%) translateY(-50%); /* ย้ายไปทางขวา 100% และขึ้นข้างบน 50% */
   padding: 6px 10px;
   background: #333;
   color: white;
@@ -348,12 +348,12 @@ export default {
 .tooltip-btn::before {
   content: "";
   position: absolute;
-  bottom: 130%;
-  left: 50%;
-  transform: translateX(-50%) translateY(100%);
+  top: 50%;           /* ตำแหน่งกึ่งกลางด้านบนของปุ่ม */
+  right: -10px;       /* เริ่มจากด้านขวาของปุ่ม */
+  transform: translateY(-50%); /* ขึ้นข้างบน 50% */
   border-width: 5px;
   border-style: solid;
-  border-color: #333 transparent transparent transparent;
+  border-color: transparent #333 transparent transparent; /* เปลี่ยนลูกศรชี้ไปทางซ้าย */
   visibility: hidden;
   opacity: 0;
   transition: 0.3s;

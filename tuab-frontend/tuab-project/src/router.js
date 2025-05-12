@@ -22,6 +22,7 @@ import StaffDashboard from './pages/StaffDashboard.vue'
 import SuperStaffDashboard from './pages/SuperStaffDashboard.vue'
 import OperationList from './pages/OperationList.vue'
 import Dashboard from './pages/Dashboard.vue'
+import BookingProcess from './pages/BookingProcess.vue'
 
 
 Vue.use(Router)
@@ -138,6 +139,11 @@ export default new Router({
         path: '/Dashboard',
         name: 'Dashboard',
         component: Dashboard
+    },
+    {
+        path: '/BookingProcess',
+        name: 'BookingProcess',
+        component: BookingProcess
     }
     ]
 })

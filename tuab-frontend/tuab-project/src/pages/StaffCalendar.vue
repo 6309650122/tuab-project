@@ -138,6 +138,7 @@ data() {
     specialDays: [], //วันพิเศษ วันวาเลนไทน์ วันฮาโลวีน
     buddhistHolidays: [], // วันหยุดทางศาสนา/วัฒนธรรม
     showHolidayModal: false,
+    bookedDates: [], 
     newHoliday: {
       date: '',
       name: '',
@@ -181,37 +182,66 @@ computed: {
     today.setHours(0, 0, 0, 0); // รีเซ็ทเวลาให้เป็น 00:00:00 เพื่อเปรียบเทียบเฉพาะวันที่
     
     while (day <= endDate) {
-      const isOutsideMonth = day.getMonth() !== this.currentDate.getMonth();
-      const isClosed = this.isFieldClosed(day);
-      const isHoliday = this.isHoliday(day);
-      const isSpecialDay = this.isSpecialDay(day) || this.isCustomSpecialDay(day);
-      const holidayName = isHoliday ? this.getHolidayName(day) : '';
-      const specialDayName = isSpecialDay ? this.getSpecialDayName(day) || this.getCustomSpecialDayName(day) : '';
-
-      // เพิ่มการตรวจสอบว่าเป็นวันที่ผ่านมาแล้วหรือไม่
-      const isPastDate = day < today;
-
-      // คำนวณ isSpecialBookableDay ให้ถูกต้อง
-      const isSpecialBookableDay = isSpecialDay && !isHoliday && !isClosed && !isOutsideMonth && !isPastDate;
-        
-      days.push({
-        date: new Date(day),
-        isOutsideMonth,
-        isClosed,
-        isHoliday,
-        isSpecialDay,
-        isSpecialBookableDay,
-        holidayName,
-        specialDayName,
-        isPastDate 
-      });
+    const isOutsideMonth = day.getMonth() !== this.currentDate.getMonth();
+    const isClosed = this.isFieldClosed(day);
+    const isHoliday = this.isHoliday(day);
+    const isSpecialDay = this.isSpecialDay(day) || this.isCustomSpecialDay(day);
+    const holidayName = isHoliday ? this.getHolidayName(day) : '';
+    const specialDayName = isSpecialDay ? this.getSpecialDayName(day) || this.getCustomSpecialDayName(day) : '';
+    const isPastDate = day < today;
+    
+    // เพิ่มการตรวจสอบว่ามีการจองหรือไม่
+    const hasBooking = this.hasBooking(day);
+    
+    // ปรับเงื่อนไข: วันที่ไม่มีการจองให้ isClosed = true (ยกเว้นวันพิเศษ/วันหยุด)
+    const effectivelyClosed = isClosed || (!hasBooking && !isOutsideMonth && !isHoliday && !isSpecialDay && !isPastDate);
+    
+    const isSpecialBookableDay = isSpecialDay && !isHoliday && !isClosed && !isOutsideMonth && !isPastDate;
       
-      day.setDate(day.getDate() + 1);
-    }
-    return days;
+    days.push({
+      date: new Date(day),
+      isOutsideMonth,
+      isClosed: effectivelyClosed, // ใช้ effectivelyClosed แทน isClosed
+      isHoliday,
+      isSpecialDay,
+      isSpecialBookableDay,
+      holidayName,
+      specialDayName,
+      isPastDate,
+      hasBooking // เพิ่มข้อมูลว่ามีการจองหรือไม่
+    });
+    
+    day.setDate(day.getDate() + 1);
+  }
+  return days;
   }
 },
 methods: {
+  async loadBookedDates() {
+  const startDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+  const endDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
+  
+  const startDateStr = this.formatDateParam(startDate);
+  const endDateStr = this.formatDateParam(endDate);
+  
+  try {
+    const response = await fetch(`http://localhost:3000/bookingSchedule?startDate=${startDateStr}&endDate=${endDateStr}`);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    this.bookedDates = await response.json();
+    console.log('Booked dates:', this.bookedDates);
+  } catch (error) {
+    console.error('Error loading booked dates:', error);
+    this.bookedDates = [];
+  }
+},
+
+// เพิ่มเมธอดตรวจสอบว่ามีการจองในวันนั้นหรือไม่
+hasBooking(date) {
+  const formattedDate = this.formatDateParam(date);
+  return this.bookedDates.includes(formattedDate);
+},
   isFieldClosed(date) {
     // วันเสาร์ (6) และ วันอาทิตย์ (0) = ปิด
     return date.getDay() === 0 || date.getDay() === 6;
@@ -326,15 +356,18 @@ methods: {
   },
 
   async changeMonth(increment) {
-    const newDate = new Date(this.currentDate);
-    newDate.setMonth(newDate.getMonth() + increment);
-    this.currentDate = newDate;
-    
-    // โหลดข้อมูลวันหยุดใหม่เมื่อเปลี่ยนปี
-    if (this.currentDate.getFullYear() !== new Date().getFullYear()) {
-      await this.loadHolidays(this.currentDate.getFullYear());
-    }
-  },
+  const newDate = new Date(this.currentDate);
+  newDate.setMonth(newDate.getMonth() + increment);
+  this.currentDate = newDate;
+  
+  // โหลดข้อมูลวันหยุดใหม่เมื่อเปลี่ยนปี
+  if (this.currentDate.getFullYear() !== new Date().getFullYear()) {
+    await this.loadHolidays(this.currentDate.getFullYear());
+  }
+  
+  // โหลดข้อมูลการจองสำหรับเดือนใหม่
+  await this.loadBookedDates();
+},
 
   handleDateClick(day) {
     if ((!day.isOutsideMonth && !day.isClosed && !day.isHoliday && !day.isPastDate) || 
@@ -525,6 +558,7 @@ async mounted() {
   console.log('Calendar component mounted');
   // โหลดข้อมูลวันหยุดจาก API เมื่อ component ถูกโหลด
   await this.loadHolidays();
+  await this.loadBookedDates();
 },
 mixins: [NotToken]
 }

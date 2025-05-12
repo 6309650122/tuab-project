@@ -105,4 +105,33 @@ router.get('/checkWork', function(req, res, next) {
     );
 });
 
+// Get all working dates (dates with at least one staff scheduled) for userCalendar
+router.get('/working-dates', function(req, res, next) {
+    const startDate = req.query.startDate || new Date().toISOString().split('T')[0];
+    const endDate = req.query.endDate || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0];
+    
+    const query = `
+        SELECT DISTINCT DATE_FORMAT(workingDate, '%Y-%m-%d') as workDate 
+        FROM WorkSchedule 
+        WHERE workingDate BETWEEN ? AND ?
+        ORDER BY workingDate
+    `;
+    
+    connection.execute(
+        query,
+        [startDate, endDate],
+        (err, results) => {
+            if (err) {
+                console.error('Error fetching working dates from database:', err);
+                return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+            }
+            
+            // แปลงผลลัพธ์เป็นอาร์เรย์ของวันที่
+            const workingDates = results.map(row => row.workDate);
+            
+            res.json({ status: 'ok', data: workingDates });
+        }
+    );
+});
+
 module.exports = router;

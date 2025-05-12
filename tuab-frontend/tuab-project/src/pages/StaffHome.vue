@@ -13,50 +13,67 @@
         <p Align=center><button class="menu" @click="booking"><span> BOOK NOW </span></button></p><br>
         <p Align=center><button class="menu" @click="cancel"><span> CANCEL BOOKING </span></button></p><br>
         <p Align=center><button class="menu" @click="history"><span> BOOKING HISTORY </span></button></p><br>
-        <p Align=center><button class="staffmenu" @click="shiftSchedule"><span><img src="setting.png" width=9%> Manage Timesheet </span></button></p><br>
+        <p Align=center><button class="staffmenu tooltip-btn" @click="StaffTimesheet" data-tooltip="ดูตารางเวลาการทำงานของฉันและสมาชิก"><span><img src="setting.png" width=9%> Staff Timesheet </span></button></p><br>
+        <p Align=center><button class="staffmenu tooltip-btn" @click="shiftSchedule" data-tooltip="จัดการตารางเวลาการทำงานของฉัน"><span><img src="setting.png" width=9%> Manage Timesheet </span></button></p><br>
       </div>
 
       <div class="content">
-        <br><br><br>
+        <br>
         <h1>Welcome to TU Archery Booking system</h1><br>
-        <h4>You're logging-in in Staff mode, Please select date to approve the bookings</h4><br>
-        <form @submit.prevent="submitForm">
-          <p Align="center">
-            <input class="datepicker" type="date" v-model="selectedDate" :min="minDate" :max="maxDate">
-            <button class="select" type="submit">Select</button>
-          </p>
-        </form>
-        <br><br>
+        <h4>You're logging-in in Staff mode, Please select date to approve the bookings</h4>
+        <br>
+        <StaffCalendar mode="superstaff" role="Staff" @date-selected="handleCalendarDateSelect" />
+      </div>
 
-          <!-- Bookings Slot -->
+      <!-- Booking Management PopUp -->
+<div class="booking-popup" v-if="showBookingPopup">
+  <div class="booking-popup-content">
+    <div class="booking-popup-header">
+      <h2>การจองสำหรับวันที่: {{ formatDisplayDate(selectedDate) }}</h2>
+      <span class="close-btn" @click="closeBookingPopup">&times;</span>
+    </div>
+    <div class="booking-popup-body">
+      <div v-if="bookings.length === 0" class="no-bookings">
+        <p>ไม่มีการจองสำหรับวันนี้</p>
+      </div>
+      
+      <div v-else>
+        <!-- Bookings Slot -->
         <div v-for="(booking, index) in bookings" :key="index" class="slot">
           <template v-if="booking.bookingStatusID !== 3">
-            <h2>{{ booking.username }}</h2>
-            <name>{{ booking.name }}</name>
-            <t1>(Tel.{{booking.telNumber}})</t1>
-            <h5>{{ booking.shiftID }}</h5>
-            <h5>Lane {{ booking.targetLaneID }}</h5>
+            <h2>Username: {{ booking.username }}</h2>
+            <h2>Name: {{ booking.name }}</h2>
+            <h2>Tel: {{booking.telNumber}}</h2>
+            <h2>Shift: {{ booking.shiftID }}</h2>
+            <h2>Lane: {{ booking.targetLaneID }}</h2>
             <button class="slipbtn" @click="showSlip(booking)">Payment</button>
+            <h2>Select Status</h2>
             <select v-model="selectedStatus[index]" class="status-select" id="status">
               <option v-if="!selectedStatus[index]" :value="null" disabled selected>Please select one:</option>
               <option v-for="status in status" :key="status.id" :value="status.id">{{ status.name }}</option>
             </select>
+            <button class="update-btn" @click="updateSingleBooking(booking.bookingID, index)" 
+                    :disabled="!selectedStatus[index]">
+                    Update Status
+            </button>
             <br>
           </template>
         </div>
-        <center><button class="submit" type="submit" @click="updateStatus">UPDATE</button></center>
       </div>
+    </div>
+  </div>
+</div>
 
-      <!-- Slip PopUp -->
-      <div class="popup" id="popup">
-        <a class="close" @click="closePopup">X</a>
-        <br><br>
-        <p1>Payment Detail</p1>
-        <br><br>
-        <p2>Bank:  {{ bankName }}</p2><br>
-        <p2>Last 4 digits of account no.: {{ accountDigit }}</p2><br>
-        <p2>Proceed date and time: {{ dateATime }}</p2>
-      </div>
+    <!-- Payment Slip PopUp -->
+    <div class="popup" id="popup">
+      <a class="close" @click="closePopup">X</a>
+      <br><br>
+      <p1>Payment Detail</p1>
+      <br><br>
+      <p2>Bank:  {{ bankName }}</p2><br>
+      <p2>Last 4 digits of account no.: {{ accountDigit }}</p2><br>
+      <p2>Proceed date and time: {{ dateATime }}</p2>
+    </div>
     </body>
   </div>
 </template>
@@ -65,9 +82,11 @@
 import axios from 'axios';
 import LogoutBotton from '../components/LogoutBotton.vue';
 import NotToken from '../components/NotToken.vue';
+import StaffCalendar from './StaffCalendar.vue';
 export default {
   components:{
-    LogoutBotton
+    LogoutBotton,
+    StaffCalendar
   },
   data() {
     return {
@@ -88,13 +107,30 @@ export default {
       bankName: '',
       accountDigit: '',
       dateATime: '',
-      selectedStatus: []
+      selectedStatus: [],
+      showBookingPopup: false,
     };
   },
   mixins: [NotToken],
   methods: {
+    // รับค่าวันที่จากปฏิทินเมื่อมีการคลิก
+    handleCalendarDateSelect(formattedDate) {
+      console.log("Received date from calendar:", formattedDate);
+      this.selectedDate = formattedDate;
+      this.fetchBookings(); // เรียกฟังก์ชันเพื่อดึงข้อมูลการจองสำหรับวันที่เลือก
+    },
+    
+    // แสดงวันที่ในรูปแบบที่อ่านง่าย
+    formatDisplayDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('th-TH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    },
     booking() {
-      this.$router.replace("booking");
+      this.$router.replace("bookingProcess");
     },
     history() {
       this.$router.replace("history");
@@ -105,11 +141,17 @@ export default {
     shiftSchedule() {
       this.$router.replace("shift-schedule");
     },
+    StaffTimesheet() {
+      this.$router.push("staff-timesheet");
+    },
     openPopup(){
       popup.classList.add('open-popup')
     },
     closePopup(){
       popup.classList.remove('open-popup')
+    },
+    closeBookingPopup() {
+      this.showBookingPopup = false;
     },
     showSlip(booking) {
       const { username, bookingID } = booking;
@@ -140,6 +182,23 @@ export default {
         console.error('Error fetching bookings:', error);
       });
     },
+    // ดึงข้อมูลการจองและแสดง popup
+    fetchBookings() {
+      axios.get('http://localhost:3000/checkBookStaff', { params: { date: this.selectedDate } })
+      .then(response => {
+        this.bookings = response.data;
+        
+        // กำหนดค่าเริ่มต้นอาร์เรย์ selectedStatus ด้วยสถานะการจองปัจจุบัน
+        this.selectedStatus = this.bookings.map(booking => booking.bookingStatusID);
+        
+        // แสดง popup หลังจากดึงข้อมูลเสร็จ
+        this.showBookingPopup = true;
+      })
+      .catch(error => {
+        console.error('Error fetching bookings:', error);
+      });
+    },
+    
     fetchOperation() {
       axios.get('http://localhost:3000/checkoperation')
       .then(response => {
@@ -173,6 +232,30 @@ export default {
           });
         }
       });
+    },
+    updateSingleBooking(bookingID, index) {
+      const selectedStatus = this.selectedStatus[index];
+      
+      if (!selectedStatus) {
+        alert('กรุณาเลือกสถานะก่อนอัพเดต');
+        return;
+      }
+      
+      axios.post('http://localhost:3000/staffApprove', {
+        bookId: bookingID,
+        status: selectedStatus
+      })
+      .then(response => {
+        console.log(`อัพเดตสถานะสำหรับการจอง ID ${bookingID} สำเร็จ`);
+        alert(`อัพเดตสถานะเรียบร้อยแล้ว!`);
+        
+        // รีโหลดข้อมูลการจองเพื่อแสดงสถานะล่าสุด
+        this.fetchBookings();
+      })
+      .catch(error => {
+        console.error(`เกิดข้อผิดพลาดในการอัพเดตสถานะสำหรับการจอง ID ${bookingID}:`, error);
+        alert('เกิดข้อผิดพลาดในการอัพเดต โปรดลองอีกครั้ง');
+      });
     }
   },
   mounted() {
@@ -180,7 +263,7 @@ export default {
     const today = new Date();
 
     // Set the minimum date to today
-    this.minDate = ISOString().split('T')[0];
+    this.minDate = today.toISOString().split('T')[0];
 
     // Get tomorrow's date
     const tomorrow = new Date();
@@ -194,5 +277,49 @@ export default {
 </script>
 
 <style scoped>
-@import '@/assets/css/StaffHome.css';
+@import '@/assets/css/SuperStaffHome.css';
+@import '@/assets/css/Calendar.css';
+
+.tooltip-btn {
+  position: relative;
+}
+
+.tooltip-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 50%;            /* ตำแหน่งกึ่งกลางด้านบนของปุ่ม */
+  right: -10px;        /* เริ่มจากด้านขวาของปุ่ม */
+  transform: translateX(100%) translateY(-50%); /* ย้ายไปทางขวา 100% และขึ้นข้างบน 50% */
+  padding: 6px 10px;
+  background: #333;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  visibility: hidden;
+  opacity: 0;
+  transition: 0.3s;
+  z-index: 10;
+}
+
+.tooltip-btn::before {
+  content: "";
+  position: absolute;
+  top: 50%;           /* ตำแหน่งกึ่งกลางด้านบนของปุ่ม */
+  right: -10px;       /* เริ่มจากด้านขวาของปุ่ม */
+  transform: translateY(-50%); /* ขึ้นข้างบน 50% */
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent #333 transparent transparent; /* เปลี่ยนลูกศรชี้ไปทางซ้าย */
+  visibility: hidden;
+  opacity: 0;
+  transition: 0.3s;
+  z-index: 10;
+}
+
+.tooltip-btn:hover::after,
+.tooltip-btn:hover::before {
+  visibility: visible;
+  opacity: 1;
+}
 </style>

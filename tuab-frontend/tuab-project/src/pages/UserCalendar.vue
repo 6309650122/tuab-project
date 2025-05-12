@@ -128,6 +128,7 @@
         specialDays: [], //วันพิเศษ วันวาเลนไทน์ วันฮาโลวีน
         buddhistHolidays: [], // วันหยุดทางศาสนา/วัฒนธรรม
         showHolidayModal: false,
+        workingDates: [],
         newHoliday: {
           date: '',
           name: '',
@@ -202,9 +203,45 @@
       }
     },
     methods: {
+    async loadWorkingDates() {
+        const startDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+        const endDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
+        
+        const formattedStartDate = this.formatDateParam(startDate);
+        const formattedEndDate = this.formatDateParam(endDate);
+        
+        try {
+          const response = await fetch(`http://localhost:3000/workSchedule/working-dates?startDate=${formattedStartDate}&endDate=${formattedEndDate}`);
+          
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          
+          const data = await response.json();
+          this.workingDates = data.data;
+          console.log('Working dates loaded:', this.workingDates);
+        } catch (error) {
+          console.error('Error loading working dates:', error);
+          this.workingDates = [];
+        }
+      },
+
+      isWorkingDate(date) {
+        const formattedDate = this.formatDateParam(date);
+        return this.workingDates.includes(formattedDate);
+      },
+
       isFieldClosed(date) {
-        // วันเสาร์ (6) และ วันอาทิตย์ (0) = ปิด
-        return date.getDay() === 0 || date.getDay() === 6;
+        // วันเสาร์ (6) และ วันอาทิตย์ (0) = ปิด หรือวันที่ไม่มีสต๊าฟทำงาน
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        
+        // ถ้าเป็นวันธรรมดา (จันทร์-ศุกร์) ต้องตรวจสอบว่ามีสต๊าฟทำงานหรือไม่
+        if (!isWeekend) {
+          // ถ้าไม่มีสต๊าฟทำงาน ให้ถือเป็นวันปิดทำการ
+          return !this.isWorkingDate(date);
+        }
+        
+        return isWeekend;
       },
     
       isHoliday(date) {
@@ -324,6 +361,7 @@
         if (this.currentDate.getFullYear() !== new Date().getFullYear()) {
           await this.loadHolidays(this.currentDate.getFullYear());
         }
+        await this.loadWorkingDates();
       },
     
       handleDateClick(day) {
@@ -507,6 +545,7 @@
       console.log('Calendar component mounted');
       // โหลดข้อมูลวันหยุดจาก API เมื่อ component ถูกโหลด
       await this.loadHolidays();
+      await this.loadWorkingDates();
     },
     mixins: [NotToken]
     }

@@ -35,6 +35,7 @@ var staffScheduleRouter = require('./routes/staffTimesheet');
 var dashboardRouter = require('./routes/dashboard');
 var allstaffRouter = require('./routes/allstaff');
 var countStaffShiftsRouter = require('./routes/countStaffShifts');
+var bookingScheduleRouter = require('./routes/bookingSchedule');
 
 var app = express();
 
@@ -77,6 +78,7 @@ app.use('/staffTimesheet', staffScheduleRouter);
 app.use('/dashboard', dashboardRouter);
 app.use('/allstaff', allstaffRouter);
 app.use('/countStaffShifts', countStaffShiftsRouter);
+app.use('/bookingSchedule', bookingScheduleRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

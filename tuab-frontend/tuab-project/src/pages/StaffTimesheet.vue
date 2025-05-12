@@ -108,7 +108,7 @@
                 setCurrentPage: currentPage,
                 nextLabel: 'ถัดไป',
                 prevLabel: 'ก่อนหน้า',
-                rowsPerPageLabel: 'แสดง:',
+                rowsPerPageLabel: 'แสดงมากสุด',
                 ofLabel: 'จาก',
                 pageLabel: 'หน้า', // for 'pages' mode
                 allLabel: 'ทั้งหมด',
@@ -120,28 +120,28 @@
               theme="default"
             >
             <template slot="table-row" slot-scope="props">
-  <span v-if="props.column.field == 'workingDate'">
-    {{ formatDate(props.row.workingDate) }}
-  </span>
-  <span v-else-if="props.column.field == 'dayName'">
-    {{ getDayName(props.row.workingDate) }}
-  </span>
-  <span v-else-if="props.column.field == 'workingShift'">
-    {{ getShiftInfo(props.row.workingShift) }}
-  </span>
-  <span v-else-if="props.column.field == 'status'">
-    <span class="status-badge" :class="getStatusClass(props.row.workingDate)">
-      {{ getStatusText(props.row.workingDate) }}
-    </span>
-  </span>
-  <span v-else-if="props.column.field == 'staffName'">
-    <!-- ใช้ staffName จาก props.row โดยตรง โดยไม่ต้องเรียกฟังก์ชันอีก -->
-    {{ props.row.staffName || props.row.username }}
-  </span>
-  <span v-else>
-    {{ props.formattedRow[props.column.field] }}
-  </span>
-</template>
+                <span v-if="props.column.field == 'workingDate'">
+                  {{ formatDate(props.row.workingDate) }}
+                </span>
+                <span v-else-if="props.column.field == 'dayName'">
+                  {{ getDayName(props.row.workingDate) }}
+                </span>
+                <span v-else-if="props.column.field == 'workingShift'">
+                  {{ getShiftInfo(props.row.workingShift) }}
+                </span>
+                <span v-else-if="props.column.field == 'status'">
+                  <span class="status-badge" :class="getStatusClass(props.row.workingDate)">
+                    {{ getStatusText(props.row.workingDate) }}
+                  </span>
+                </span>
+                <span v-else-if="props.column.field == 'staffName'">
+                  <!-- ใช้ staffName จาก props.row โดยตรง โดยไม่ต้องเรียกฟังก์ชันอีก -->
+                  {{ props.row.staffName || props.row.username }}
+                </span>
+                <span v-else>
+                  {{ props.formattedRow[props.column.field] }}
+                </span>
+              </template>
               
               <div slot="emptystate">
                 ไม่พบข้อมูลการปฏิบัติงาน
@@ -174,7 +174,7 @@ export default {
       endDateFilter: '',
       activeFilter: 'thisMonth',
       currentPage: 1,
-      pageSize: 6,
+      pageSize: 3,
       totalRows: 0,
       currentOperationPeriod: null,
       columns: [
