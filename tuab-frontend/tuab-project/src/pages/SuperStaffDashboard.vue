@@ -1142,7 +1142,7 @@ getFacultyGroup(facultyCode) {
     return 'วิทยาศาสตร์และเทคโนโลยี';
   }
   // กลุ่มสังคมศาสตร์
-  else if (['01', '03', '08', '05', '06'].includes(facultyCode)) {
+  else if (['01', '03', '08', '05', '06', '19'].includes(facultyCode)) {
     return 'สังคมศาสตร์และมนุษยศาสตร์';
   }
   // กลุ่มแพทยศาสตร์และสาธารณสุข
@@ -1559,15 +1559,15 @@ createStaffShiftsChart() {
         
         let message = 'ไม่พบข้อมูลประสิทธิภาพการเข้าทำงานของสมาชิกชมรม';
         if (this.dateRange === 'today') {
-        message += 'ในวันนี้';
+            message += 'ในวันนี้';
         } else if (this.dateRange === 'week') {
-        message += 'ในสัปดาห์นี้';
+            message += 'ในสัปดาห์นี้';
         } else if (this.dateRange === 'month') {
-        message += 'ในเดือนนี้';
+            message += 'ในเดือนนี้';
         } else if (this.dateRange === '3months') {
-        message += 'ใน 3 เดือนที่ผ่านมา';
+            message += 'ใน 3 เดือนที่ผ่านมา';
         } else if (this.dateRange === 'custom') {
-        message += 'ในช่วงเวลาที่เลือก';
+            message += 'ในช่วงเวลาที่เลือก';
         }
         
         ctx.fillText(message, ctx.canvas.width / 2, ctx.canvas.height / 2);
@@ -1582,64 +1582,63 @@ createStaffShiftsChart() {
     // เตรียมข้อมูลสำหรับกราฟ (กรณีมีข้อมูล)
     let staffNames = this.dashboardData.staffShifts.map(item => item.name || 'ไม่ระบุชื่อ');
     let totalShifts = this.dashboardData.staffShifts.map(item => parseInt(item.totalShifts) || 0);
-    console.log('Using real staff shifts data:', staffNames, totalShifts);
     
     try {
         // กำหนดค่า options ที่ใช้ในทุกกรณี
         const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        legend: { display: false },  // ซ่อน legend
-        scales: {
-            xAxes: [{
-            ticks: {
-                beginAtZero: true,
-                callback: function(value) {
-                    if (value % 1 === 0) {
-                        return value;
+            responsive: true,
+            maintainAspectRatio: false,
+            legend: { display: false },  // ซ่อน legend
+            scales: {
+                xAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value) {
+                            if (value % 1 === 0) {
+                                return value;
+                            }
+                        },
+                        fontStyle: 'bold',  
+                        fontColor: '#000'
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'จำนวนชิฟท์',
+                        fontStyle: 'bold',  
+                        fontColor: '#000'
                     }
-                },
-                fontStyle: 'bold',  
-                fontColor: '#000'
-            },
-            scaleLabel: {
-                display: true,
-                labelString: 'จำนวนชิฟท์',
-                fontStyle: 'bold',  
-                fontColor: '#000'
+                }],
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'สมาชิกชมรม',
+                        fontStyle: 'bold',  
+                        fontColor: '#000'
+                    },
+                    ticks: {
+                        fontStyle: 'bold',
+                        fontColor: '#000'
+                    },
+                }]
             }
-            }],
-            yAxes: [{
-            scaleLabel: {
-                display: true,
-                labelString: 'สมาชิกชมรม',
-                fontStyle: 'bold',  
-                fontColor: '#000'
-            },
-            ticks: {
-                fontStyle: 'bold',
-                fontColor: '#000'
-            },
-            }]
-        }
         };
         
         // สร้างกราฟด้วย horizontalBar เท่านั้น
         this.charts.staffShiftsChart = new Chart(ctx, {
-        type: 'horizontalBar',
-        data: {
-            labels: staffNames,
-            datasets: [
-            {
-                label: 'จำนวนการลงชิฟท์',
-                data: totalShifts,
-                backgroundColor: 'rgba(75, 75, 220, 0.7)',
-                borderColor: 'rgba(75, 75, 220, 1)',
-                borderWidth: 1
-            }
-            ]
-        },
-        options: chartOptions
+            type: 'horizontalBar',
+            data: {
+                labels: staffNames,
+                datasets: [
+                {
+                    label: 'จำนวนการลงชิฟท์',
+                    data: totalShifts,
+                    backgroundColor: 'rgba(75, 75, 220, 0.7)',
+                    borderColor: 'rgba(75, 75, 220, 1)',
+                    borderWidth: 1
+                }
+                ]
+            },
+            options: chartOptions
         });
         
         console.log('Staff shifts chart created successfully');

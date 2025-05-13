@@ -44,8 +44,8 @@
             <h2>Username: {{ booking.username }}</h2>
             <h2>Name: {{ booking.name }}</h2>
             <h2>Tel: {{booking.telNumber}}</h2>
-            <h2>Shift: {{ booking.shiftID }}</h2>
-            <h2>Lane: {{ booking.targetLaneID }}</h2>
+            <h2>Shift: {{ formatShiftTime(booking.shiftID) }}</h2>
+            <h2>Lane: {{ formatLaneNumber(booking.targetLaneID) }}</h2>
             <button class="slipbtn" @click="showSlip(booking)">Payment</button>
             <h2>Select Status</h2>
             <select v-model="selectedStatus[index]" class="status-select" id="status">
@@ -73,6 +73,11 @@
       <p2>Bank:  {{ bankName }}</p2><br>
       <p2>Last 4 digits of account no.: {{ accountDigit }}</p2><br>
       <p2>Proceed date and time: {{ dateATime }}</p2>
+      <br><br>
+      <p1>Booking for another person</p1>
+      <br><br>
+      <p2>Name: {{ FriendName }}</p2><br>
+      <p2>Tel: {{ FriendTel }}</p2>
     </div>
     </body>
   </div>
@@ -109,6 +114,8 @@ export default {
       dateATime: '',
       selectedStatus: [],
       showBookingPopup: false,
+      FriendName: '',
+      FriendTel: '',
     };
   },
   mixins: [NotToken],
@@ -118,6 +125,26 @@ export default {
       console.log("Received date from calendar:", formattedDate);
       this.selectedDate = formattedDate;
       this.fetchBookings(); // เรียกฟังก์ชันเพื่อดึงข้อมูลการจองสำหรับวันที่เลือก
+    },
+
+    formatShiftTime(shiftID) {
+      // สร้าง mapping ระหว่าง shiftID และช่วงเวลา
+      const shiftMap = {
+        "1": "1 (17.00-17.30)",
+        "2": "2 (17.30-18.00)"
+      };
+      
+      // ตรวจสอบว่ามีค่าใน mapping หรือไม่
+      return shiftMap[shiftID] || shiftID;
+    },
+    
+    // Method สำหรับแปลงรหัส Lane เป็นหมายเลข Lane ที่เข้าใจง่าย
+    formatLaneNumber(laneID) {
+      // ถ้า laneID อยู่ในช่วง 101-106 ให้ลบ 100 ออก
+      if (laneID >= 101 && laneID <= 106) {
+        return laneID - 100;
+      }
+      return laneID; // ส่งค่าเดิมกลับถ้าไม่ตรงกับเงื่อนไข
     },
     
     // แสดงวันที่ในรูปแบบที่อ่านง่าย
@@ -161,6 +188,8 @@ export default {
         this.bankName = response.data[0].bankName
         this.accountDigit = response.data[0].accountDigit
         this.dateATime = response.data[0].dateATime
+        this.FriendName = response.data[0].FriendName || ''; // ใช้ friendName (ตัวพิมพ์เล็ก) ตามที่ส่งจาก API
+        this.FriendTel = response.data[0].FriendTel || '';
         this.openPopup()
       })
       .catch(error => {

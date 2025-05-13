@@ -239,13 +239,13 @@ export default {
     selectedStaff(val) {
       const staffColumn = this.columns.find(col => col.field === 'staffName');
       if (staffColumn) {
-        staffColumn.hidden = !val && this.roleName !== 'Super Staff';
+        staffColumn.hidden = false; // ให้แสดงเสมอ
       }
     },
     roleName(val) {
       const staffColumn = this.columns.find(col => col.field === 'staffName');
       if (staffColumn) {
-        staffColumn.hidden = !this.selectedStaff && val !== 'Super Staff';
+        staffColumn.hidden = false; // ให้แสดงเสมอ
       }
     }
   },
@@ -272,7 +272,7 @@ export default {
       // ซ่อนคอลัมน์เจ้าหน้าที่ถ้าไม่ใช่ Super Staff และไม่ได้เลือกแสดงของคนอื่น
       const staffColumn = this.columns.find(col => col.field === 'staffName');
       if (staffColumn) {
-        staffColumn.hidden = !this.selectedStaff && this.roleName !== 'Super Staff';
+        staffColumn.hidden = false; // ให้แสดงเสมอ
       }
       
       // ตั้งค่าค่าเริ่มต้นเป็น "วันนี้" แทนเดือนนี้
@@ -428,6 +428,7 @@ getStaffName(username) {
   
   // ถ้าพบรายชื่อสต๊าฟให้คืนค่าชื่อ หากไม่พบให้คืนค่าเป็น null
   return staff ? staff.name : null;
+  console.log("รายชื่อสต๊าฟทั้งหมด:", this.allStaff);
 },
 
     isUpcoming(dateString) {

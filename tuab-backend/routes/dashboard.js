@@ -187,12 +187,13 @@ router.get('/staff-performance', (req, res) => {
       COUNT(b.bookingID) as totalBookings
     FROM User u
     LEFT JOIN Booking b ON u.username = b.username
+    WHERE u.roleID IN ('2', '3')  /* เพิ่มเงื่อนไขให้แสดงเฉพาะ Staff (3) และ SuperStaff (2) */
   `;
   
   const params = [];
   
   if (start && end) {
-    sql += " WHERE b.bookingDate BETWEEN ? AND ?";
+    sql += " AND b.bookingDate BETWEEN ? AND ?";
     params.push(start, end);
   }
   

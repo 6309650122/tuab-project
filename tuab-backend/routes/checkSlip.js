@@ -12,8 +12,11 @@ router.get('/', jsonParser, function(req, res, next) {
   const { username, bookId } = req.query;
 
   connection.execute(
-    "SELECT bankName, accountDigit, dateATime FROM Payment WHERE username = ? AND bookingID = ?",
-    [username, bookId],
+    "SELECT p.bankName, p.accountDigit, p.dateATime, b.FriendName, b.FriendTel " +
+    "FROM Payment p " +
+    "LEFT JOIN Booking b ON p.bookingID = b.bookingID " +
+    "WHERE p.bookingID = ?",
+    [bookId],
     (err, rows) => {
       if (err) {
         console.error('Error executing SELECT query:', err);
@@ -23,27 +26,30 @@ router.get('/', jsonParser, function(req, res, next) {
       const transformedRows = rows.map(row => ({
         bankName: row.bankName,
         accountDigit: row.accountDigit,
-        dateATime: formatDateTime(row.dateATime)
+        dateATime: formatDateTime(row.dateATime),
+        FriendName: row.FriendName || '- (No booking for another person)',       
+        FriendTel: row.FriendTel || '- (No booking for another person)'
       }));
 
       res.json(transformedRows);
-      }
-    );
-  });
-  function formatDateTime(dateTimeString) {
-    const dateTime = new Date(dateTimeString);
-    const options = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-      timeZone: 'Asia/Bangkok'
-    };
-  
-    return dateTime.toLocaleString('en-US', options);
-  }
-  
+    }
+  );
+});
+
+function formatDateTime(dateTimeString) {
+  const dateTime = new Date(dateTimeString);
+  const options = {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Bangkok'
+  };
+
+  return dateTime.toLocaleString('en-US', options);
+}
+
 module.exports = router;

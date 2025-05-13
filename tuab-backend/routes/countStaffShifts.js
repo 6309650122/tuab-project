@@ -7,12 +7,17 @@ var jwt = require('jsonwebtoken');
 
 var connection = require('../connection/db.js');
 
+// ใน countShiftStaff.js
+
 router.get('/', (req, res) => {
     const { start, end } = req.query;
     
-    // SQL query เพื่อนับจำนวนชิฟท์ที่แต่ละคนทำงาน
+    // SQL query ที่คำนวณจำนวนชิฟท์อย่างถูกต้อง โดยนับ workingShift = 3 เป็น 2 ครั้ง
     const query = `
-      SELECT w.username, u.name, COUNT(w.workID) as totalShifts
+      SELECT 
+        w.username, 
+        u.name, 
+        SUM(CASE WHEN w.workingShift = 3 THEN 2 ELSE 1 END) as totalShifts
       FROM WorkSchedule w
       JOIN User u ON w.username = u.username
       WHERE w.workingDate BETWEEN ? AND ? AND w.isActive IS NULL
@@ -27,6 +32,6 @@ router.get('/', (req, res) => {
       }
       res.json(results);
     });
-  });
+});
 
 module.exports = router;
