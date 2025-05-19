@@ -183,7 +183,7 @@ export default {
     showSlip(booking) {
       const { username, bookingID } = booking;
       console.log(bookingID);
-      axios.get('http://localhost:3000/checkSlip', { params: { username, bookId: bookingID } })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkSlip`, { params: { username, bookId: bookingID } })
       .then(response => {
         this.bankName = response.data[0].bankName
         this.accountDigit = response.data[0].accountDigit
@@ -197,7 +197,7 @@ export default {
       });
     },
     submitForm() {
-      axios.get('http://localhost:3000/checkBookStaff', { params: { date: this.selectedDate } })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkBookStaff`, { params: { date: this.selectedDate } })
       .then(response => {
         this.bookings = response.data;
         this.selectedStatus = new Array(this.bookings.length).fill(null);
@@ -213,7 +213,7 @@ export default {
     },
     // ดึงข้อมูลการจองและแสดง popup
     fetchBookings() {
-      axios.get('http://localhost:3000/checkBookStaff', { params: { date: this.selectedDate } })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkBookStaff`, { params: { date: this.selectedDate } })
       .then(response => {
         this.bookings = response.data;
         
@@ -229,7 +229,7 @@ export default {
     },
     
     fetchOperation() {
-      axios.get('http://localhost:3000/checkoperation')
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkoperation`)
       .then(response => {
         if (response.data && response.data.length > 0) {
           const operationDay = response.data[0];
@@ -252,7 +252,7 @@ export default {
         if (booking.bookingStatusID !== 3) {
           const selectedStatus = this.selectedStatus[index];
           const { bookingID } = booking;
-          axios.post('http://localhost:3000/staffApprove', { bookId: bookingID, status: selectedStatus })
+          axios.post(`${import.meta.env.VITE_API_BASE_URL}/staffApprove`, { bookId: bookingID, status: selectedStatus })
           .then(response => {
             console.log(`Status updated for bookingID ${bookingID}: ${response.data.message}`);
           })
@@ -270,7 +270,7 @@ export default {
         return;
       }
       
-      axios.post('http://localhost:3000/staffApprove', {
+      axios.post(`${import.meta.env.VITE_API_BASE_URL}/staffApprove`, {
         bookId: bookingID,
         status: selectedStatus
       })

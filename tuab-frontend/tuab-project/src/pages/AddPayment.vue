@@ -115,7 +115,7 @@
           }
 
           if (bankName) {
-            axios.post('http://localhost:3000/uploadSlip', {
+            axios.post(`${import.meta.env.VITE_API_BASE_URL}/uploadSlip`, {
               bank: bankName,
               username: this.username,
               bankno: this.bankno,

@@ -73,7 +73,7 @@ export default {
       const today = new Date().toISOString().split('T')[0];
       const futureDate = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
 
-      axios.get('http://localhost:3000/bookingHistory', {
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/bookingHistory`, {
         params: {
           username: this.username
         }
@@ -168,7 +168,7 @@ export default {
       const originalLaneID = parseInt(this.bookingToCancel.targetLaneID) + 100;
       
       // Send shiftID to cancel the specific time slot
-      axios.post('http://localhost:3000/cancelBooking', {
+      axios.post(`${import.meta.env.VITE_API_BASE_URL}/cancelBooking`, {
         date: formattedDate,
         status: 3, // Cancel status
         username: this.username,

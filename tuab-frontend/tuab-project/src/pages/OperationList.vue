@@ -212,7 +212,7 @@
         async fetchOperationDays() {
             this.loading = true;
             try {
-                const response = await axios.get('http://localhost:3000/operation', {
+                const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/operation`, {
                 params: {
                     page: this.currentPage,
                     limit: this.pageSize,
@@ -412,7 +412,7 @@
         try {
           if (this.showEditModal) {
             // แก้ไขข้อมูล
-            await axios.put(`http://localhost:3000/operation/${this.selectedOperation.operationID}`, {
+            await axios.put(`${import.meta.env.VITE_API_BASE_URL}/operation/${this.selectedOperation.operationID}`, {
               startDate: this.formData.startDate,
               endDate: this.formData.endDate,
               description: this.formData.description
@@ -420,7 +420,7 @@
             alert('แก้ไขข้อมูลเรียบร้อยแล้ว');
           } else {
             // เพิ่มข้อมูลใหม่
-            await axios.post('http://localhost:3000/operation', {
+            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/operation`, {
               startDate: this.formData.startDate,
               endDate: this.formData.endDate,
               description: this.formData.description
@@ -439,7 +439,7 @@
   
       async deleteOperation() {
         try {
-          await axios.delete(`http://localhost:3000/operation/${this.selectedOperation.operationID}`);
+          await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/operation/${this.selectedOperation.operationID}`);
           alert('ลบข้อมูลเรียบร้อยแล้ว');
           
           // รีเฟรชข้อมูล
@@ -451,11 +451,11 @@
         }
       },
       
-      exportOperationDays() {
+      exportOperationDays() { 
         this.loading = true;
         
         // ดึงข้อมูลทั้งหมดที่ตรงกับเงื่อนไขการกรอง (ไม่มีการแบ่งหน้า)
-        axios.get('http://localhost:3000/operation', {
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/operation`, {
           params: {
             limit: 1000, // จำนวนมากพอที่จะได้ข้อมูลทั้งหมด
             page: 1,

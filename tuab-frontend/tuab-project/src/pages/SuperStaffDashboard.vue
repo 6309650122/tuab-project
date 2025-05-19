@@ -346,7 +346,7 @@ async fetchDashboardData() {
     const { start, end } = this.getDateRangeParams();
     
     // 1. ดึงข้อมูลสรุป
-    const summaryResponse = await axios.get('http://localhost:3000/dashboard/summary', {
+    const summaryResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/summary`, {
       params: {
         staff: this.selectedStaff || undefined,
         start,
@@ -356,7 +356,7 @@ async fetchDashboardData() {
     this.dashboardData.summary = summaryResponse.data;
     
     // 2. ดึงข้อมูลการจองตามวันที่ (พร้อมข้อมูลสถานะแล้ว)
-    const bookingsByDateResponse = await axios.get('http://localhost:3000/dashboard/bookings-by-date', {
+    const bookingsByDateResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/bookings-by-date`, {
       params: {
         staff: this.selectedStaff || undefined,
         start,
@@ -367,7 +367,7 @@ async fetchDashboardData() {
     console.log('Bookings by date (with status):', this.dashboardData.bookingsByDate);
     
     // 3. ดึงข้อมูลการจองตามเดือน (พร้อมข้อมูลสถานะแล้ว)
-    const bookingsByMonthResponse = await axios.get('http://localhost:3000/dashboard/bookings-by-month', {
+    const bookingsByMonthResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/bookings-by-month`, {
       params: {
         year: new Date().getFullYear(),
         staff: this.selectedStaff || undefined
@@ -377,7 +377,7 @@ async fetchDashboardData() {
     console.log('Bookings by month (with status):', this.dashboardData.bookingsByMonth);
     
     // 4. ดึงข้อมูลการจองตามเลน
-    const bookingsByLaneResponse = await axios.get('http://localhost:3000/dashboard/bookings-by-lane', {
+    const bookingsByLaneResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/bookings-by-lane`, {
       params: {
         start,
         end
@@ -386,7 +386,7 @@ async fetchDashboardData() {
     this.dashboardData.bookingsByLane = bookingsByLaneResponse.data;
     
     // 5. ดึงข้อมูลประสิทธิภาพของ Staff
-    const staffPerformanceResponse = await axios.get('http://localhost:3000/dashboard/staff-performance', {
+    const staffPerformanceResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/staff-performance`, {
       params: {
         start,
         end
@@ -399,7 +399,7 @@ async fetchDashboardData() {
     }));
     
     // 6. ดึงข้อมูลการจัดตารางงานของ Staff
-    const staffShiftsResponse = await axios.get('http://localhost:3000/countStaffShifts', {
+    const staffShiftsResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/countStaffShifts`, {
       params: {
         start,
         end
@@ -409,7 +409,7 @@ async fetchDashboardData() {
     
     // 7. ดึงข้อมูลการจองตาม shift (สำหรับฟิลเตอร์วันนี้)
     if (this.dateRange === 'today') {
-      const bookingsByShiftResponse = await axios.get('http://localhost:3000/dashboard/bookings-by-shift', {
+      const bookingsByShiftResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/bookings-by-shift`, {
         params: {
           date: start
         }
@@ -418,7 +418,7 @@ async fetchDashboardData() {
     }
     
     // 8. ดึงข้อมูลการจองแยกตามคณะ
-    const bookingsByFacultyResponse = await axios.get('http://localhost:3000/dashboard/bookings-by-faculty', {
+    const bookingsByFacultyResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/dashboard/bookings-by-faculty`, {
       params: {
         start,
         end

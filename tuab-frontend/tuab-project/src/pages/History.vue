@@ -81,7 +81,7 @@ export default {
     this.fetchBookings();
     
     // Log ข้อมูลดิบเพื่อตรวจสอบ
-    axios.get('http://localhost:3000/filterBookMonth', {params: {username: this.username}})
+    axios.get(`${import.meta.env.VITE_API_BASE_URL}/filterBookMonth`, {params: {username: this.username}})
       .then(response => {
         console.log('Raw booking data sample:', response.data[0]);
       });
@@ -224,7 +224,7 @@ export default {
     },
     
     fetchBookings() {
-      axios.get('http://localhost:3000/filterBookMonth', {params: {username: this.username}})
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/filterBookMonth`, {params: {username: this.username}})
       .then(response => {
         const bookings = response.data;
         // เรียงตามวันที่และ Lane ID

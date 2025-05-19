@@ -91,8 +91,7 @@
       },
       async submitForm() {
         try {
-          const dayOffUrl = 'http://localhost:3000/checkdayoff';
-          const dayOffResponse = await axios.get(dayOffUrl, {
+          const dayOffResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkdayoff`, {
             params: {
               workDate: this.selectedDate
             }
@@ -106,8 +105,7 @@
             });
           } else {
             this.status = true;
-            const bookingCheckUrl = 'http://localhost:3000/bookingCheck';
-            const bookingCheckResponse = await axios.get(bookingCheckUrl, {
+            const bookingCheckResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/bookingcheck`, {
               params: {
                 workDate: this.selectedDate
               }

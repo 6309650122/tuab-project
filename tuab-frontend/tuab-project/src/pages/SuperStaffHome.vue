@@ -9,6 +9,8 @@
           </h3>
         </div>
         <br><br>
+        <p Align=center><LogoutBotton /></p>
+        <br><br>
         <p Align=center><button class="menu" @click="booking"><span> BOOK NOW </span></button></p><br>
         <p Align=center><button class="menu" @click="cancel"><span> CANCEL BOOKING </span></button></p><br>
         <p Align=center><button class="menu" @click="history"><span> BOOKING HISTORY </span></button></p><br>
@@ -16,8 +18,6 @@
         <p Align=center><button class="staffmenu tooltip-btn" @click="shiftSchedule" data-tooltip="จัดการตารางเวลาการทำงานของฉัน"><span><img src="setting.png" width=9%> Manage Timesheet </span></button></p><br>
         <p Align=center><button class="staffmenu tooltip-btn" @click="operation" data-tooltip="แก้ไขช่วงวันเปิดสนาม"><span><img src="setting.png" width=9%> Edit Settings </span></button></p><br>
         <p Align=center><button class="staffmenu tooltip-btn" @click="Dashboard" data-tooltip="ดูภาพรวมข้อมูลการจองและสถิติต่างๆ"><span><img src="setting.png" width=9%> Dashboard </span></button></p><br>
-        <br><br>
-        <p Align=center><LogoutBotton /></p>
       </div>
 
       <div class="content">
@@ -189,7 +189,7 @@ export default {
     showSlip(booking) {
       const { username, bookingID } = booking;
 
-      axios.get('http://localhost:3000/checkSlip', { params: { username, bookId: bookingID } })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkSlip`, { params: { username, bookId: bookingID } })
       .then(response => {
         this.bankName = response.data[0].bankName
         this.accountDigit = response.data[0].accountDigit
@@ -216,7 +216,7 @@ export default {
     
     // ดึงข้อมูลการจองและแสดง popup
     fetchBookings() {
-      axios.get('http://localhost:3000/checkBookStaff', { params: { date: this.selectedDate } })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkBookStaff`, { params: { date: this.selectedDate } })
       .then(response => {
         this.bookings = response.data;
         
@@ -232,7 +232,7 @@ export default {
     },
     
     fetchOperation() {
-      axios.get('http://localhost:3000/checkoperation')
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkoperation`)
       .then(response => {
         if (response.data && response.data.length > 0) {
           const operationDay = response.data[0];
@@ -246,61 +246,6 @@ export default {
         console.error('Error fetching bookings:', error);
       });
     },
-    /*
-    updateStatus() {
-    // ตรวจสอบว่ามีการจองที่ใช้งานอยู่ (ไม่ได้ยกเลิก) ใดๆ ที่ขาดสถานะหรือไม่
-    const activeBookings = this.bookings.filter(booking => booking.bookingStatusID !== 3);
-    const activeIndices = activeBookings.map(booking => 
-      this.bookings.findIndex(b => b.bookingID === booking.bookingID)
-    );
-    
-    const hasNullStatus = activeIndices.some(index => 
-      this.selectedStatus[index] === null || this.selectedStatus[index] === undefined
-    );
-    
-    if (hasNullStatus) {
-      alert('กรุณาเลือกสถานะสำหรับการจองที่ใช้งานอยู่ทั้งหมด');
-      return;
-    }
-    
-    // แสดง loading indicator
-    this.isLoading = true;
-    
-    // อัพเดตทีละรายการแบบลำดับ
-    const processUpdates = async () => {
-      try {
-        // วนลูปทีละรายการ
-        for (let i = 0; i < activeBookings.length; i++) {
-          const booking = activeBookings[i];
-          const index = this.bookings.findIndex(b => b.bookingID === booking.bookingID);
-          const selectedStatus = this.selectedStatus[index];
-          
-          // ส่งคำขอไปยัง API และรอจนกว่าจะเสร็จ
-          await axios.post('http://localhost:3000/staffApprove', {
-            bookId: booking.bookingID,
-            status: selectedStatus
-          });
-          
-          // หน่วงเวลาเล็กน้อยระหว่างการอัพเดตแต่ละรายการ (500ms)
-          if (i < activeBookings.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-        }
-        
-        // เมื่อเสร็จสิ้น
-        alert('อัพเดตทุกการจองเรียบร้อยแล้ว!');
-        this.closeBookingPopup();
-        this.isLoading = false;
-      } catch (error) {
-        console.error('เกิดข้อผิดพลาดในการอัพเดต:', error);
-        alert('เกิดข้อผิดพลาดในการอัพเดต โปรดลองอีกครั้ง');
-        this.isLoading = false;
-      }
-    };
-    
-    // เริ่มกระบวนการอัพเดต
-    processUpdates();
-  }, */
 
   // ฟังก์ชันสำหรับอัพเดตสถานะทีละรายการ
   updateSingleBooking(bookingID, index) {
@@ -311,7 +256,7 @@ export default {
         return;
       }
       
-      axios.post('http://localhost:3000/staffApprove', {
+      axios.post(`${import.meta.env.VITE_API_BASE_URL}/staffApprove`, {
         bookId: bookingID,
         status: selectedStatus
       })

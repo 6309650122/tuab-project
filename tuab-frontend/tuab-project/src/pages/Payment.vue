@@ -94,7 +94,7 @@ export default {
         username: this.username
       };
 
-      axios.get('http://localhost:3000/checkBookForPay', { params: params })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkBookForPay`, { params: params })
       .then(response => {
         // const bookingID = response.data.bookingID;
         this.bookingID = response.data[0].bookingID;
@@ -155,7 +155,7 @@ export default {
         }
 
         if (bankName) {
-          axios.post('http://localhost:3000/uploadSlip', {
+          axios.post(`${import.meta.env.VITE_API_BASE_URL}/uploadSlip`, {
             bank: bankName,
             username: this.username,
             bankno: this.bankno,

@@ -29,12 +29,13 @@ export default {
                 }
                 return Promise.reject(error);
             }
-        );
+        ); 
 
-        axios.get('http://localhost:3000/user-detail', {
+        axios
+        .get(`${import.meta.env.VITE_API_BASE_URL}/user-detail`, {
             headers: {
-                Authorization: `Bearer ${token}`
-            }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
         })
         .then(response => {
             // Update the name property with user information retrieved from the server

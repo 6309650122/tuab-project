@@ -124,7 +124,7 @@ export default {
       localStorage.setItem("lane", lane)
       localStorage.setItem("shift", shift)
 
-      axios.post('http://localhost:3000/booking', formData)
+      axios.post(`${import.meta.env.VITE_API_BASE_URL}/booking`, formData)
       .then(response => {
         console.log('Booking saved successfully!');
         this.openPopup();
@@ -139,7 +139,7 @@ export default {
           username: this.username
         };
 
-        axios.post('http://localhost:3000/addTelnumber', telFormData)
+        axios.post(`${import.meta.env.VITE_API_BASE_URL}/addTelnumber`, telFormData)
         .then(response => {
           console.log('TelNumber updated successfully!');
         })

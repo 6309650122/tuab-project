@@ -311,7 +311,7 @@ export default {
     async fetchCurrentOperationPeriod() {
       try {
         // ใช้ API จาก checkoperation.js
-        const response = await axios.get('http://localhost:3000/checkoperation');
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkoperation`);
         
         if (response.data && response.data.length > 0) {
           // กรองเอาเฉพาะช่วงการเปิดสนามที่ครอบคลุมวันปัจจุบัน
@@ -343,7 +343,7 @@ async fetchWorkSchedule() {
   this.loading = true;
   
   try {
-    const response = await axios.get('http://localhost:3000/staffTimesheet', {
+    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/staffTimesheet`, {
       params: {
         startDate: this.startDateFilter,
         endDate: this.endDateFilter,
@@ -561,7 +561,7 @@ getStatusClass(dateString) {
 
     async fetchAllStaff() {
   try {
-    const response = await axios.get('http://localhost:3000/allstaff');
+    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/allstaff`);
     
     if (response.data && response.data.success && response.data.staff) {
       // เก็บข้อมูลสต๊าฟทั้งหมดรวมถึงตัวเอง (ไม่ต้องกรองตัวเองออก)

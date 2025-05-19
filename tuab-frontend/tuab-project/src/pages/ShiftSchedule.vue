@@ -81,7 +81,7 @@ export default {
         workDate: this.selectedDate
       }
       
-      axios.get(`http://localhost:3000/checkWork`, { params: formUD })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkWork`, { params: formUD })
       .then(response => {
         const userSchedules = response.data;
 
@@ -99,7 +99,7 @@ export default {
             workShift: this.calculateWorkShift()
           };
 
-          axios.post('http://localhost:3000/workSchedule', formData)
+          axios.post(`${import.meta.env.VITE_API_BASE_URL}/workSchedule`, formData)
           .then(response => {
             console.log('Shift schedule saved successfully!');
             this.openPopup();

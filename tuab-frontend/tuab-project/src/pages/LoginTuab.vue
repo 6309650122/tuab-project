@@ -27,7 +27,7 @@ export default {
   methods: {
     async login() {
       try {
-        const response = await axios.post('http://localhost:3000/login', {
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/login`, {
           username: this.$data.username,
           password: this.$data.password,
         });
@@ -36,7 +36,7 @@ export default {
           // sessionStorage.setItem("role", response.data.roles);
           localStorage.setItem('token', response.data.token); // Store JWT token
 
-          axios.get('http://localhost:3000/user-detail', {
+          axios.get(`${import.meta.env.VITE_API_BASE_URL}/user-detail`, {
             headers: {
               Authorization: `Bearer ${response.data.token}`
             }

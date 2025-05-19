@@ -56,7 +56,7 @@ export default {
   methods: {
     async fetchHolidays() {
     try {
-      const response = await axios.get('http://localhost:3000/holidays');
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/holidays`);
       this.holidays = response.data.holidays
         .filter(holiday => holiday.public)  // กรองเฉพาะวันหยุดที่ public: true
         .map(holiday => holiday.date);      // เก็บแค่วันที่
@@ -85,7 +85,7 @@ export default {
       localStorage.removeItem("opID");
     },
     fetchOperation() {
-      axios.get('http://localhost:3000/checkoperation')
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkoperation`)
       .then(response => {
         if (response.data && response.data.length > 0) {
           const operationDay = response.data[0];
@@ -115,7 +115,7 @@ export default {
 
         console.log('Sending form data:', formData); 
 
-        axios.post('http://localhost:3000/editoperation', formData)
+        axios.post(`${import.meta.env.VITE_API_BASE_URL}/editoperation`, formData)
         .then((response) => {
           console.log('Response from server:', response);
           this.openPopup();

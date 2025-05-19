@@ -272,7 +272,7 @@ export default {
   },
   methods: {
     fetchLatestOperationDay() {
-      axios.get('http://localhost:3000/checkoperation')
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkoperation`)
         .then(response => {
           if (response.data && response.data.length > 0) {
             // เนื่องจาก API ส่งข้อมูลกลับมาเรียงตาม operationID DESC อยู่แล้ว
@@ -326,7 +326,7 @@ export default {
     loadRegisteredDates() {
       if (!this.username) return;
       
-      axios.get(`http://localhost:3000/workSchedule/user/${this.username}`)
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/workSchedule/user/${this.username}`)
         .then(response => {
           this.registeredDates = response.data;
           console.log('Registered dates loaded:', this.registeredDates);
@@ -489,7 +489,7 @@ export default {
         workDate: date
       };
       
-      axios.get('http://localhost:3000/checkWork', { params: formData })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkWork`, { params: formData })
         .then(response => {
           const userSchedules = response.data;
           if (userSchedules.length > 0) {
@@ -551,7 +551,7 @@ export default {
       
       console.log('Deleting workID:', id); // เพิ่ม log สำหรับ debug
       
-      axios.delete(`http://localhost:3000/workSchedule/${id}`)
+      axios.delete(`${import.meta.env.VITE_API_BASE_URL}/workSchedule/${id}`)
         .then(response => {
           console.log('Shift schedule deleted successfully!', response);
           this.closeConfirmPopup();
@@ -603,7 +603,7 @@ export default {
       
       if (this.isEditing && this.existingScheduleId) {
         // อัพเดทข้อมูลที่มีอยู่แล้ว
-        axios.put(`http://localhost:3000/workSchedule/${this.existingScheduleId}`, formData)
+        axios.put(`${import.meta.env.VITE_API_BASE_URL}/workSchedule/${this.existingScheduleId}`, formData)
           .then(response => {
             console.log('Shift schedule updated successfully!');
             this.closeShiftPopup();
@@ -618,7 +618,7 @@ export default {
           });
       } else {
         // บันทึกข้อมูลใหม่
-        axios.post('http://localhost:3000/workSchedule', formData)
+        axios.post(`${import.meta.env.VITE_API_BASE_URL}/workSchedule`, formData)
           .then(response => {
             console.log('Shift schedule saved successfully!');
             this.closeShiftPopup();
@@ -702,7 +702,7 @@ export default {
       
       try {
         // ดึงข้อมูลวันหยุดจาก Google API
-        const response = await fetch(`http://localhost:3000/googleholidays?year=${currentYear}`);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/googleholidays?year=${currentYear}`);
         
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
@@ -723,7 +723,7 @@ export default {
         
         // ดึงข้อมูลวันหยุดที่ถูกจัดการไว้แล้ว (custom holidays)
         try {
-          const customResponse = await fetch(`http://localhost:3000/holidays?year=${currentYear}`);
+          const customResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/holidays?year=${currentYear}`);
           if (customResponse.ok) {
             this.holidays = await customResponse.json();
             console.log('Custom holidays loaded:', this.holidays);

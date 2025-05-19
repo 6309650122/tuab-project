@@ -219,7 +219,7 @@ methods: {
   const endDateStr = this.formatDateParam(endDate);
   
   try {
-    const response = await fetch(`http://localhost:3000/bookingSchedule?startDate=${startDateStr}&endDate=${endDateStr}`);
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookingSchedule?startDate=${startDateStr}&endDate=${endDateStr}`);
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
@@ -407,7 +407,7 @@ hasBooking(date) {
       };
       
       // ส่งข้อมูลไปยัง API
-      const dayOffUrl = 'http://localhost:3000/holidays';
+      const dayOffUrl = `${import.meta.env.VITE_API_BASE_URL}/holidays`;
       fetch(dayOffUrl, {
         method: 'POST',
         headers: {
@@ -444,7 +444,7 @@ hasBooking(date) {
   async removeHoliday(id) {
     try {
       // ลบวันหยุดด้วย API
-      const dayOffUrl = `http://localhost:3000/holidays/${id}`;
+      const dayOffUrl = `${import.meta.env.VITE_API_BASE_URL}/holidays/${id}`;
       const response = await fetch(dayOffUrl, {
         method: 'DELETE'
       });
@@ -481,7 +481,7 @@ hasBooking(date) {
     
     try {
       // ดึงข้อมูลวันหยุดจาก Google Calendar API
-      const response = await fetch(`http://localhost:3000/googleholidays?year=${currentYear}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/googleholidays?year=${currentYear}`);
       
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
@@ -530,7 +530,7 @@ hasBooking(date) {
     
     try {
       // URL สำหรับดึงข้อมูลวันหยุดที่กำหนดเพิ่มเติม
-      const dayOffUrl = `http://localhost:3000/holidays?year=${currentYear}`;
+      const dayOffUrl = `${import.meta.env.VITE_API_BASE_URL}/holidays?year=${currentYear}`;
       
       const response = await fetch(dayOffUrl);
       if (!response.ok) {

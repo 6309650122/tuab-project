@@ -614,7 +614,7 @@
       async fetchHolidaysFromAPI(year) {
         try {
           // ดึงข้อมูลวันหยุดจาก Google API
-          const response = await fetch(`http://localhost:3000/googleholidays?year=${year}`);
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/googleholidays?year=${year}`);
           
           if (!response.ok) {
             throw new Error(`Request failed with status ${response.status}`);
@@ -634,7 +634,7 @@
           }));
           
           // ดึงข้อมูลวันหยุดที่ถูกจัดการไว้แล้ว (custom holidays)
-          const customResponse = await fetch(`http://localhost:3000/holidays?year=${year}`);
+          const customResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/holidays?year=${year}`);
           if (customResponse.ok) {
             this.holidays = await customResponse.json();
             console.log('Custom holidays loaded:', this.holidays);
@@ -735,7 +735,7 @@
 
         console.log('Sending form data:', formData);
 
-        axios.post('http://localhost:3000/editoperation', formData)
+        axios.post(`${import.meta.env.VITE_API_BASE_URL}/editoperation`, formData)
           .then((response) => {
             console.log('Response from server:', response);
             this.showSuccessPopup = true;
@@ -763,7 +763,7 @@
       
       // ดึงข้อมูลวันที่เปิดทำการ
       fetchOperationDays() {
-        axios.get('http://localhost:3000/checkoperation')
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkoperation`)
           .then(response => {
             if (response.data && response.data.length > 0) {
               // เก็บข้อมูลทั้งหมดที่ได้รับจาก API
