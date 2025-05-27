@@ -177,35 +177,93 @@ router.get('/bookings-by-lane', (req, res) => {
 router.get('/staff-performance', (req, res) => {
   const { start, end } = req.query;
   
-  let sql = `
-    SELECT 
-      u.username,
-      u.name,
-      u.roleID,
-      SUM(CASE WHEN b.bookingStatusID = 2 THEN 1 ELSE 0 END) as confirmedBookings,
-      SUM(CASE WHEN b.bookingStatusID = 3 THEN 1 ELSE 0 END) as cancelledBookings,
-      COUNT(b.bookingID) as totalBookings
-    FROM User u
-    LEFT JOIN Booking b ON u.username = b.username
-    WHERE u.roleID IN ('2', '3')  /* เพิ่มเงื่อนไขให้แสดงเฉพาะ Staff (3) และ SuperStaff (2) */
+  console.log('=== STAFF PERFORMANCE API DEBUG ===');
+  console.log('Parameters:', { start, end });
+  
+  // Query 1: ดึง Staff ทั้งหมด
+  const staffQuery = `
+    SELECT username, name, roleID 
+    FROM User 
+    WHERE roleID IN ('2', '3')
+    ORDER BY name
   `;
   
-  const params = [];
-  
-  if (start && end) {
-    sql += " AND b.bookingDate BETWEEN ? AND ?";
-    params.push(start, end);
-  }
-  
-  sql += " GROUP BY u.username, u.name, u.roleID";
-  
-  connection.query(sql, params, (err, results) => {
+  connection.query(staffQuery, (err, staffResults) => {
     if (err) {
-      console.error('Error querying database:', err);
+      console.error('Error querying staff:', err);
       return res.status(500).json({ error: 'Database error' });
     }
     
-    res.json(results);
+    console.log('Staff found:', staffResults);
+    
+    if (staffResults.length === 0) {
+      return res.json([]);
+    }
+    
+    // Query 2: ดึงข้อมูลการจองของ Staff แต่ละคน (ที่เขาเป็นคนจอง)
+    let bookingQuery = `
+      SELECT 
+        username,
+        SUM(CASE WHEN bookingStatusID = 2 THEN 1 ELSE 0 END) as confirmedBookings,
+        SUM(CASE WHEN bookingStatusID = 3 THEN 1 ELSE 0 END) as cancelledBookings,
+        SUM(CASE WHEN bookingStatusID = 1 THEN 1 ELSE 0 END) as pendingBookings,
+        COUNT(bookingID) as totalBookings
+      FROM Booking
+      WHERE username IN (${staffResults.map(() => '?').join(',')})
+    `;
+    
+    const bookingParams = staffResults.map(staff => staff.username);
+    
+    if (start && end) {
+      bookingQuery += " AND bookingDate BETWEEN ? AND ?";
+      bookingParams.push(start, end);
+    }
+    
+    bookingQuery += " GROUP BY username";
+    
+    console.log('Booking Query:', bookingQuery);
+    console.log('Booking Params:', bookingParams);
+    
+    connection.query(bookingQuery, bookingParams, (err, bookingResults) => {
+      if (err) {
+        console.error('Error querying bookings:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      
+      console.log('Booking results:', bookingResults);
+      
+      // รวมข้อมูล Staff กับข้อมูลการจอง
+      const result = staffResults.map(staff => {
+        const bookingData = bookingResults.find(b => b.username === staff.username) || {
+          confirmedBookings: 0,
+          cancelledBookings: 0,
+          pendingBookings: 0,
+          totalBookings: 0
+        };
+        
+        const staffData = {
+          username: staff.username,
+          name: staff.name,
+          roleID: staff.roleID,
+          confirmedBookings: parseInt(bookingData.confirmedBookings) || 0,
+          cancelledBookings: parseInt(bookingData.cancelledBookings) || 0,
+          pendingBookings: parseInt(bookingData.pendingBookings) || 0,
+          totalBookings: parseInt(bookingData.totalBookings) || 0
+        };
+        
+        console.log(`Data for ${staff.name}:`, staffData);
+        return staffData;
+      });
+      
+      console.log('=== FINAL RESULT ===');
+      console.log('Total staff:', result.length);
+      result.forEach(staff => {
+        console.log(`${staff.name}: Total=${staff.totalBookings}, Confirmed=${staff.confirmedBookings}, Cancelled=${staff.cancelledBookings}, Pending=${staff.pendingBookings}`);
+      });
+      console.log('====================');
+      
+      res.json(result);
+    });
   });
 });
 

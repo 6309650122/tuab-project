@@ -386,6 +386,49 @@ export default {
     }
   },
   methods: {
+    checkOperationOverlap(newStartDate, newEndDate, excludeOperationID = null) {
+      if (!newStartDate || !newEndDate) {
+        return { hasOverlap: false };
+      }
+
+      const newStart = new Date(newStartDate);
+      const newEnd = new Date(newEndDate);
+      newStart.setHours(0, 0, 0, 0);
+      newEnd.setHours(23, 59, 59, 999);
+
+      // ตรวจสอบกับ operation periods ที่มีอยู่แล้ว
+      for (const operation of this.operationDays) {
+        // ถ้ากำลังแก้ไข operation ที่มีอยู่ ให้ข้าม operation นั้น
+        if (excludeOperationID && operation.operationID === excludeOperationID) {
+          continue;
+        }
+
+        const existingStart = new Date(operation.startDate);
+        const existingEnd = new Date(operation.endDate);
+        existingStart.setHours(0, 0, 0, 0);
+        existingEnd.setHours(23, 59, 59, 999);
+
+        // ตรวจสอบการทับซ้อน
+        const isOverlapping = !(newEnd < existingStart || newStart > existingEnd);
+        
+        if (isOverlapping) {
+          return {
+            hasOverlap: true,
+            conflictOperation: operation,
+            conflictDetails: {
+              id: operation.operationID,
+              startDate: operation.startDate,
+              endDate: operation.endDate,
+              description: operation.description || 'ไม่มีหมายเหตุ'
+            }
+          };
+        }
+      }
+
+      return { hasOverlap: false };
+    },
+
+
     // เมธอดสำหรับจัดการวันหยุด (เพิ่มเข้ามาใหม่)
     formatThaiDate(date) {
       if (!date) return '';
@@ -901,11 +944,67 @@ export default {
         }
 
         if (this.startDate && this.endDate && !this.isSubmitting && this.startDate !== this.endDate) {
-          // ตรวจสอบวันหยุดในช่วงที่เลือกอีกครั้ง
+          // ✅ ตรวจสอบการทับซ้อน
+          const overlapCheck = this.checkOperationOverlap(this.startDate, this.endDate);
+          
+          if (overlapCheck.hasOverlap) {
+            const conflict = overlapCheck.conflictDetails;
+            this.showErrorPopup = true;
+            
+            // ✅ แก้ไข: ใช้ template string แบบธรรมดาแทน \n
+            this.errorMessage = `ช่วงเวลาที่เลือกซ้อนกับการเปิดสนามที่มีอยู่แล้ว!
+
+          การเปิดสนาม #${conflict.id}
+          ช่วงเวลา: ${this.formatDate(conflict.startDate)} - ${this.formatDate(conflict.endDate)}
+          หมายเหตุ: ${conflict.description}
+
+          กรุณาเลือกช่วงเวลาที่ไม่ทับซ้อนกัน`;
+                return;
+              }
+
+          // ตรวจสอบวันหยุดในช่วงที่เลือก
           this.checkHolidaysInRange();
           
-          // แสดง popup ให้กรอก description แทนที่จะบันทึกทันที
+          // แสดง popup ให้กรอก description
           this.showDescriptionPopup = true;
+        }
+      },
+
+
+      formatDate(dateString) {
+        if (!dateString) return '';
+        
+        // ตรวจสอบรูปแบบวันที่ก่อน
+        if (dateString.includes('-')) {
+          const parts = dateString.split('-');
+          if (parts.length === 3) {
+            // ถ้าเป็นรูปแบบ YYYY-MM-DD
+            if (parts[0].length === 4) {
+              return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            // ถ้าเป็นรูปแบบ DD-MM-YYYY
+            else if (parts[2].length === 4) {
+              return `${parts[0]}/${parts[1]}/${parts[2]}`;
+            }
+          }
+        }
+        
+        // กรณีอื่นๆ แปลงเป็น Date object และจัดรูปแบบ
+        try {
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) {
+            return dateString; // ถ้าแปลงไม่ได้ ส่งค่าเดิมกลับไป
+          }
+          
+          // จัดรูปแบบวันที่เป็น DD/MM/YYYY
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const year = date.getFullYear();
+          
+          return `${day}/${month}/${year}`;
+        } catch (error) {
+          console.error('Error formatting date:', error);
+          return dateString;
         }
       },
 
@@ -918,9 +1017,26 @@ export default {
       saveWithDescription() {
         this.isSubmitting = true;
         
+        // ตรวจสอบการทับซ้อนอีกครั้งก่อนบันทึก
+        const overlapCheck = this.checkOperationOverlap(this.startDate, this.endDate);
+        
+        if (overlapCheck.hasOverlap) {
+          const conflict = overlapCheck.conflictDetails;
+          this.showErrorPopup = true;
+          this.showDescriptionPopup = false;
+          
+          // ✅ แก้ไข: ใช้ template string แบบธรรมดาแทน \n
+          this.errorMessage = `ช่วงเวลาที่เลือกซ้อนกับการเปิดสนามที่มีอยู่แล้ว!
+
+          การเปิดสนาม #${conflict.id}
+          ช่วงเวลา: ${this.formatDate(conflict.startDate)} - ${this.formatDate(conflict.endDate)}
+          หมายเหตุ: ${conflict.description}`;
+              
+          this.isSubmitting = false;
+          return;
+        }
+
         const formData = {
-          // ไม่ส่ง opID ไป - เพื่อให้บันทึกเป็นรายการใหม่ทุกครั้ง
-          // opID: this.operationID, --> ลบบรรทัดนี้ออก
           Nstart: this.startDate,
           Nend: this.endDate,
           description: this.operationDescription,
@@ -939,8 +1055,14 @@ export default {
             console.log('Response from server:', response);
             this.showSuccessPopup = true;
             this.showDescriptionPopup = false;
-            this.operationDescription = ''; // รีเซ็ตค่า description
-            this.fetchOperationDays(); // ดึงข้อมูลวันเปิดทำการใหม่
+            this.operationDescription = '';
+            this.fetchOperationDays();
+            
+            // รีเซ็ตฟอร์ม
+            this.startDate = '';
+            this.endDate = '';
+            this.isSelectingStartDate = false;
+            this.isSelectingEndDate = false;
           })
           .catch((error) => {
             console.error('Error inserting operation into database:', error);
@@ -950,6 +1072,44 @@ export default {
           .finally(() => {
             this.isSubmitting = false;
           });
+      },
+
+      getOverlappingOperations(startDate, endDate) {
+        if (!startDate || !endDate) return [];
+
+        const newStart = new Date(startDate);
+        const newEnd = new Date(endDate);
+        newStart.setHours(0, 0, 0, 0);
+        newEnd.setHours(23, 59, 59, 999);
+
+        return this.operationDays.filter(operation => {
+          const existingStart = new Date(operation.startDate);
+          const existingEnd = new Date(operation.endDate);
+          existingStart.setHours(0, 0, 0, 0);
+          existingEnd.setHours(23, 59, 59, 999);
+
+          // ตรวจสอบการทับซ้อน
+          return !(newEnd < existingStart || newStart > existingEnd);
+        });
+      },
+
+      showOverlapWarning(day) {
+        if (this.isSelectingEndDate && this.startDate) {
+          const tempEndDate = this.formatDateParam(day.date);
+          const overlapCheck = this.checkOperationOverlap(this.startDate, tempEndDate);
+          
+          if (overlapCheck.hasOverlap) {
+            const conflict = overlapCheck.conflictDetails;
+            const warningMessage = `⚠️ คำเตือน: ช่วงเวลาที่เลือกจะซ้อนกับ:
+      การเปิดสนาม #${conflict.id}
+      (${this.formatDate(conflict.startDate)} - ${this.formatDate(conflict.endDate)})`;
+            
+            console.warn(warningMessage);
+            return true;
+          }
+        }
+        
+        return false;
       },
       
       closeSuccessPopup() {
@@ -1057,4 +1217,14 @@ export default {
   /* ใช้ CSS ที่ส่งมา */
   @import '@/assets/css/OperationCalendar.css';
   @import '@/assets/css/Calendar.css';
+  .modal-body p {
+  white-space: pre-line;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.error-message {
+  white-space: pre-line;
+  line-height: 1.4;
+}
   </style>

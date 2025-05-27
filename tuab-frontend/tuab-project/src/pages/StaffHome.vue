@@ -66,18 +66,14 @@
 
     <!-- Payment Slip PopUp -->
     <div class="popup" id="popup">
-      <a class="close" @click="closePopup">X</a>
-      <br><br>
-      <p1>Payment Detail</p1>
-      <br><br>
-      <p2>Bank:  {{ bankName }}</p2><br>
-      <p2>Last 4 digits of account no.: {{ accountDigit }}</p2><br>
-      <p2>Proceed date and time: {{ dateATime }}</p2>
-      <br><br>
-      <p1>Booking for another person</p1>
-      <br><br>
-      <p2>Name: {{ FriendName }}</p2><br>
-      <p2>Tel: {{ FriendTel }}</p2>
+        <a class="close" @click="closePopup">X</a>
+        <p1>Payment Detail</p1>
+        <p2>Bank:  {{ bankName }}</p2>
+        <p2>Last 4 digits of account no.: {{ accountDigit }}</p2>
+        <p2>Proceed date and time: {{ dateATime }}</p2>
+        <p1>Booking for another person</p1>
+        <p2>Name: {{ FriendName }}</p2>
+        <p2>Tel: {{ FriendTel }}</p2>
     </div>
     </body>
   </div>

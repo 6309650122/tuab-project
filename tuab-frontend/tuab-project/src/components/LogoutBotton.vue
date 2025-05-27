@@ -20,7 +20,7 @@ export default{
 <style scoped>
 .logout {
 border-radius: 10px;
-background-color: #3871c5;
+background-color: #c54638;
 font-family: Verdana;
 color: #FFFFFF;
 text-align: center;

@@ -99,7 +99,7 @@
         
         <!-- การใช้งานแต่ละช่องยิง (ทุกฟิลเตอร์) -->
         <div class="chart-card">
-            <h2>การใช้งานแต่ละช่องยิง</h2>
+            <h2>สัดส่วนการจองแต่ละช่องยิง</h2>
             <canvas ref="laneUsageChart" style="height: 300px; width: 100%;"></canvas>
         </div>
         
@@ -1031,36 +1031,25 @@ createShiftBookingsChart() {
   
   const ctx = this.$refs.shiftBookingsChart.getContext('2d');
   
-  // ตรวจสอบว่ากราฟเดิมมีอยู่หรือไม่ ถ้ามีให้ทำลายก่อน
   if (this.charts.shiftBookingsChart) {
     this.charts.shiftBookingsChart.destroy();
   }
   
-  // ตรวจสอบว่ามีข้อมูลหรือไม่
   const hasData = this.dashboardData.bookingsByShift && 
                  this.dashboardData.bookingsByShift.length > 0 &&
                  this.dashboardData.bookingsByShift.some(item => item.count > 0);
   
-  // กรณีไม่มีข้อมูล ให้แสดงข้อความแทนกราฟว่าง
   if (!hasData) {
-    // ล้างพื้นที่ canvas และวาดข้อความ
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.font = '14px Prompt, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#666';
-    
-    const message = 'ไม่พบข้อมูลการจองตาม Shift ในวันนี้';
-    
-    ctx.fillText(message, ctx.canvas.width / 2, ctx.canvas.height / 2);
-    
-    // กำหนดให้ชาร์ตเป็น null เพื่อไม่ให้มีการเรียกใช้การอัพเดตของชาร์ต
+    ctx.fillText('ไม่พบข้อมูลการจองตาม Shift ในวันนี้', ctx.canvas.width / 2, ctx.canvas.height / 2);
     this.charts.shiftBookingsChart = null;
-    
     return;
   }
   
-  // เตรียมข้อมูลสำหรับกราฟ (กรณีมีข้อมูล)
   const shifts = ['17:00-17:30', '17:30-18:00'];
   const counts = [0, 0];
   
@@ -1104,6 +1093,7 @@ createShiftBookingsChart() {
         yAxes: [{
           ticks: {
             beginAtZero: true,
+            max: 6, // ✅ เพิ่ม: กำหนด Max = 6 ช่องยิง
             callback: function(value) {
               if (value % 1 === 0) {
                 return value;
@@ -1114,7 +1104,7 @@ createShiftBookingsChart() {
           },
           scaleLabel: {
             display: true,
-            labelString: 'จำนวนการจอง',
+            labelString: 'จำนวนช่องยิงที่ถูกจอง',
             fontStyle: 'bold',
             fontColor: '#000',
           }
