@@ -271,6 +271,100 @@ export default {
     }
   },
   methods: {
+    checkIfCanCancelShift(shift) {
+  return new Promise((resolve, reject) => {
+    // 1. กำหนดว่าต้องตรวจสอบ Shift ไหนบ้าง
+    // ถ้าเป็น Shift 3 ต้องตรวจสอบทั้ง Shift 1 และ 2
+    // ถ้าเป็น Shift 1 หรือ 2 ตรวจสอบเฉพาะ Shift นั้น
+    const shiftsToCheck = shift.workingShift === 3 ? ['1', '2'] : [shift.workingShift];
+    
+    // 2. สร้างรายการคำขอเพื่อตรวจสอบแต่ละ Shift
+    const checkPromises = shiftsToCheck.map(shiftId => {
+      return axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/staff/count-by-shift`, {
+        params: {
+          date: this.formatDateParam(new Date(shift.workingDate)),
+          shiftId: shiftId
+        }
+      });
+    });
+    
+    // 3. ดำเนินการตรวจสอบทั้งหมด
+    Promise.all(checkPromises)
+      .then(responses => {
+        // ตรวจสอบว่ามี Shift ใดที่จะไม่มีสต๊าฟทำงานหากยกเลิกหรือไม่
+        const canCancel = responses.every(response => {
+          // ถ้ามีสต๊าฟมากกว่า 1 คน สามารถยกเลิกได้
+          return response.data.staffCount > 1;
+        });
+        
+        resolve(canCancel);
+      })
+      .catch(error => {
+        console.error('Error checking staff count:', error);
+        // หากเกิดข้อผิดพลาด ไม่อนุญาตให้ยกเลิก
+        resolve(false);
+      });
+  });
+},
+
+processSaveShift(workShift) {
+  const formData = {
+    username: this.username,
+    workDate: this.formatDateParam(this.selectedDate),
+    workShift: workShift
+  };
+  
+  console.log('Saving data:', formData);
+  
+  if (this.isEditing && this.existingScheduleId) {
+    // อัพเดทข้อมูลที่มีอยู่แล้ว
+    axios.put(`${import.meta.env.VITE_API_BASE_URL}/workSchedule/${this.existingScheduleId}`, formData)
+      .then(response => {
+        console.log('Shift schedule updated successfully!');
+        this.closeShiftPopup();
+        this.showSuccessPopup = true;
+        // อัพเดทรายการวันที่ลงทะเบียน
+        this.loadRegisteredDates();
+      })
+      .catch(error => {
+        console.error('Error updating shift schedule:', error);
+        this.showWarningPopup = true;
+        this.warningMessage = 'เกิดข้อผิดพลาดในการอัพเดทข้อมูล';
+      });
+  } else {
+    // บันทึกข้อมูลใหม่
+    axios.post(`${import.meta.env.VITE_API_BASE_URL}/workSchedule`, formData)
+      .then(response => {
+        console.log('Shift schedule saved successfully!');
+        this.closeShiftPopup();
+        this.showSuccessPopup = true;
+        // อัพเดทรายการวันที่ลงทะเบียน
+        this.loadRegisteredDates();
+      })
+      .catch(error => {
+        console.error('Error saving shift schedule:', error);
+        this.showWarningPopup = true;
+        this.warningMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      });
+  }
+},
+
+// ฟังก์ชันเสริมสำหรับดึงรายชื่อสต๊าฟ (ใช้สำหรับการดีบัก)
+getStaffListForDate(date) {
+  return axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/staff/by-date`, {
+    params: {
+      date: this.formatDateParam(date)
+    }
+  })
+  .then(response => {
+    console.log('Staff list for date:', response.data);
+    return response.data;
+  })
+  .catch(error => {
+    console.error('Error fetching staff list:', error);
+    return { status: 'error', staff: [] };
+  });
+},
     fetchLatestOperationDay() {
       axios.get(`${import.meta.env.VITE_API_BASE_URL}/checkoperation`)
         .then(response => {
@@ -567,11 +661,22 @@ export default {
     },
 
     confirmDeleteShift(shift) {
-      this.shiftToDelete = shift;
-      console.log('Shift to delete:', shift); // เพิ่ม log สำหรับ debug
-      this.confirmMessage = `ยืนยันการยกเลิก Shift วันที่ ${this.formatThaiDate(new Date(shift.workingDate))}?`;
-      this.showConfirmPopup = true;
-    },
+  this.checkIfCanCancelShift(shift)
+    .then(canCancel => {
+      if (canCancel) {
+        // สามารถยกเลิกได้ - แสดงหน้าต่างยืนยัน
+        this.shiftToDelete = shift;
+        console.log('Shift to delete:', shift);
+        this.confirmMessage = `ยืนยันการยกเลิก Shift วันที่ ${this.formatThaiDate(new Date(shift.workingDate))}?`;
+        this.showConfirmPopup = true;
+      } else {
+        // ไม่สามารถยกเลิกได้ - แสดงข้อความเตือน
+        this.showWarningPopup = true;
+        this.warningMessage = `ไม่สามารถยกเลิก Shift วันที่ ${this.formatThaiDate(new Date(shift.workingDate))} ได้ เนื่องจากคุณเป็นสต๊าฟเพียงคนเดียวที่ทำงานในช่วงเวลานี้`;
+      }
+    });
+},
+
 
     deleteShift() {
       if (!this.existingScheduleId) {
@@ -587,52 +692,40 @@ export default {
     },
     // ปุ่มบันทึก Shift
     saveShift() {
-      if (this.selectedShifts.length === 0) {
-        this.showWarningPopup = true;
-        this.warningMessage = 'กรุณาเลือกอย่างน้อย 1 Shift';
-        return;
-      }
-      
-      const formData = {
-        username: this.username,
-        workDate: this.formatDateParam(this.selectedDate),
-        workShift: this.calculateWorkShift()
-      };
-      
-      console.log('Saving data:', formData); // เพิ่ม log สำหรับ debug
-      
-      if (this.isEditing && this.existingScheduleId) {
-        // อัพเดทข้อมูลที่มีอยู่แล้ว
-        axios.put(`${import.meta.env.VITE_API_BASE_URL}/workSchedule/${this.existingScheduleId}`, formData)
-          .then(response => {
-            console.log('Shift schedule updated successfully!');
-            this.closeShiftPopup();
-            this.showSuccessPopup = true;
-            // อัพเดทรายการวันที่ลงทะเบียน
-            this.loadRegisteredDates();
-          })
-          .catch(error => {
-            console.error('Error updating shift schedule:', error);
+  if (this.selectedShifts.length === 0) {
+    this.showWarningPopup = true;
+    this.warningMessage = 'กรุณาเลือกอย่างน้อย 1 Shift';
+    return;
+  }
+  
+  // คำนวณค่า workShift ใหม่ (1, 2, หรือ 3)
+  const newWorkShift = this.calculateWorkShift();
+  
+  // ถ้ากำลังแก้ไขและเปลี่ยนประเภท Shift ต้องตรวจสอบ
+  if (this.isEditing && this.existingScheduleId) {
+    // ค้นหา Shift ที่มีอยู่ใน registeredDates
+    const existingShift = this.registeredDates.find(shift => shift.workID === this.existingScheduleId);
+    
+    if (existingShift && existingShift.workingShift !== newWorkShift) {
+      // ประเภท Shift กำลังเปลี่ยน ต้องตรวจสอบ
+      this.checkIfCanCancelShift(existingShift)
+        .then(canModify => {
+          if (canModify) {
+            this.processSaveShift(newWorkShift);
+          } else {
             this.showWarningPopup = true;
-            this.warningMessage = 'เกิดข้อผิดพลาดในการอัพเดทข้อมูล';
-          });
-      } else {
-        // บันทึกข้อมูลใหม่
-        axios.post(`${import.meta.env.VITE_API_BASE_URL}/workSchedule`, formData)
-          .then(response => {
-            console.log('Shift schedule saved successfully!');
-            this.closeShiftPopup();
-            this.showSuccessPopup = true;
-            // อัพเดทรายการวันที่ลงทะเบียน
-            this.loadRegisteredDates();
-          })
-          .catch(error => {
-            console.error('Error saving shift schedule:', error);
-            this.showWarningPopup = true;
-            this.warningMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
-          });
-      }
-    },
+            this.warningMessage = `ไม่สามารถเปลี่ยนแปลง Shift วันที่ ${this.formatThaiDate(this.selectedDate)} ได้ เนื่องจากคุณเป็นสต๊าฟเพียงคนเดียวที่ทำงานในช่วงเวลานี้`;
+          }
+        });
+    } else {
+      // ไม่มีการเปลี่ยนประเภท Shift หรือไม่พบ ดำเนินการบันทึกต่อ
+      this.processSaveShift(newWorkShift);
+    }
+  } else {
+    // การลงทะเบียนใหม่ ไม่ต้องตรวจสอบ
+    this.processSaveShift(newWorkShift);
+  }
+},
     
     // คำนวณค่า workShift เหมือนใน ShiftSchedule.vue
     calculateWorkShift() {
@@ -663,13 +756,25 @@ export default {
 
     // แก้ไขเวรจากหน้าจัดการ
     editShift(shift) {
-      this.selectedDate = new Date(shift.workingDate);
-      this.existingScheduleId = shift.workID; // ใช้ workID แทน id
-      this.selectedShifts = this.parseWorkShift(shift.workingShift);
-      this.isEditing = true;
-      this.showShiftPopup = true;
-      this.closeManageModal();
-    },
+  this.checkIfCanCancelShift(shift)
+    .then(canEdit => {
+      if (canEdit) {
+        // สามารถแก้ไขได้ - แสดงหน้าต่างแก้ไข
+        this.selectedDate = new Date(shift.workingDate);
+        this.existingScheduleId = shift.workID; 
+        this.selectedShifts = this.parseWorkShift(shift.workingShift);
+        this.isEditing = true;
+        this.showShiftPopup = true;
+        this.closeManageModal();
+      } else {
+        // ไม่สามารถแก้ไขได้ - แสดงข้อความเตือน
+        this.showWarningPopup = true;
+        this.warningMessage = `ไม่สามารถแก้ไข Shift วันที่ ${this.formatThaiDate(new Date(shift.workingDate))} ได้ เนื่องจากคุณเป็นสต๊าฟเพียงคนเดียวที่ทำงานในช่วงเวลานี้`;
+        this.closeManageModal();
+      }
+    });
+},
+
     
     // ปิด Success Popup
     closeSuccessPopup() {

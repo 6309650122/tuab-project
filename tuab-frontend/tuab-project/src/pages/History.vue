@@ -43,12 +43,12 @@
                 </div>
                 
                 <!-- ปุ่ม Payment -->
-                <button class="payment-btn" 
+                <!-- <button class="payment-btn" 
                       :class="{ 'disabled-btn': booking.bookingStatusID === 2 || booking.bookingStatusID === 3 }" 
                       @click="addslip(booking.bookingID)"
                       :disabled="booking.bookingStatusID === 2 || booking.bookingStatusID === 3">
                   PAYMENT
-                </button>
+                </button> -->
               </div>
             </div>
           </div>

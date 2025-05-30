@@ -1,9 +1,10 @@
-// ============================================
-// ไฟล์ใหม่: /routes/staffValidation.js
-// ============================================
-
 var express = require('express');
 var router = express.Router();
+var bodyParser = require('body-parser');
+var jsonParser = bodyParser.json();
+const axios = require('axios');
+var jwt = require('jsonwebtoken');
+
 var connection = require('../connection/db.js');
 
 // นับจำนวนสต๊าฟในแต่ละวัน/Shift

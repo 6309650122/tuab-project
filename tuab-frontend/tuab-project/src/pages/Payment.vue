@@ -11,7 +11,7 @@
         </div>
         <br><br>
         <!-- <p Align=center><button class="backbtn" @click="backverify"><span> BACK </span></button></p><br> -->
-        <p Align=center><button class="skip" @click="backhome"><span> PAY LATER </span></button></p>
+        <!-- <p Align=center><button class="skip" @click="backhome"><span> PAY LATER </span></button></p> -->
       </div>
 
       <div class="content">
@@ -38,7 +38,7 @@
           <br><br>
           <h4>Proceed date and time: </h4>
           <input class="datepicker" v-model="proceedDate" type="datetime-local" required>
-          <h6>Note: Please pay within 1 hour and after submitting your payment, please wait for our confirming</h6>
+          <h6>Note: Please complete your payment and after submitting your payment, please wait for our confirmation.</h6>
           <center><button class="submit" type="submit" @click="upload">SUBMIT</button></center>
         </form>
       </div>
